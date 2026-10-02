@@ -180,3 +180,77 @@ However, everything visible at the 68000 boundary must be faithful enough for th
 Therefore, a timer used to study interrupts can be trivial internally, while its interrupt assertion and 68000 acknowledge behavior must be correct.
 
 Mackerel-F remains a reference for proven integration details; it does not define the permanent survey architecture.
+
+
+## Top-Level Machine Definition
+
+The standalone survey machine is defined by:
+
+```text
+cisc68k.sv
+```
+
+This is the architectural top level for the project.
+
+Its responsibilities are deliberately small:
+
+- instantiate fx68k
+- define the 24-bit memory map
+- decode address regions
+- connect ROM, RAM, and the write-only monitor
+- route the 68000 bus signals
+- generate/route DTACK and other bus termination signals
+- expose and observe FC0-FC2 where relevant
+- connect later experiment peripherals only when a survey topic requires them
+
+Initial structure:
+
+```text
+cisc68k.sv
+  |
+  +-- fx68k
+  +-- rom.sv
+  +-- ram.sv
+  +-- monitor.sv
+```
+
+Later additions should be narrow and experiment-driven:
+
+```text
+  +-- timer.sv
+  +-- irq_source.sv
+  +-- berr_device.sv
+  +-- waitstate_device.sv
+```
+
+### Initial Memory Map
+
+Use a simple, human-readable map:
+
+```text
+0x000000 - 0x00FFFF   ROM
+0x010000 - 0x01FFFF   RAM
+0xF00000               MONITOR
+0xF10000 - 0xFFFFFF   reserved for future experiments
+```
+
+The exact sizes may be adjusted if an experiment requires it, but the map should remain simple and explicit.
+
+### Function Codes
+
+`FC0-FC2` are outputs from the 68000 that describe the type of current bus access.
+
+They are not generic peripheral inputs that every device must implement.
+
+Instead, `cisc68k.sv` should make them available to decode or special peripheral logic when the architectural experiment requires them.
+
+Examples:
+
+- distinguishing user vs supervisor access
+- distinguishing program vs data access
+- identifying CPU-space cycles
+- recognizing interrupt-acknowledge cycles where `FC=111`
+
+This keeps function-code handling faithful at the 68000 boundary without adding unnecessary peripheral complexity.
+
+> `cisc68k.sv` defines the architectural boundary of the simulated 68000 machine.
