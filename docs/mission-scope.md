@@ -73,3 +73,21 @@ Examples:
 - simple interrupt source -> study IPL, acknowledge, vectors, and RTE
 
 The project studies the 68000, not the peripherals.
+
+
+## Machine Boundary
+
+The standalone simulator is centered on `cisc68k.sv`.
+
+That module defines the 68000-visible machine:
+
+- CPU
+- memory map
+- ROM
+- RAM
+- monitor register
+- bus handshake
+- function-code visibility
+- only the peripherals required by a specific architecture experiment
+
+The goal is not to model a complete historical computer. The goal is to make each external behavior seen by the 68000 correct and easy to observe.
