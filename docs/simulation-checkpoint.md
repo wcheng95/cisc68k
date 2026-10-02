@@ -1,45 +1,40 @@
 # Simulation Checkpoint
 
-## Known-Good Unit Tests
+## What Has Been Proven
 
-Mackerel-F's existing unit-style simulations work on macOS with Homebrew Icarus.
+The reference Mackerel-F environment successfully runs fx68k in full-system simulation under Verilator.
 
-The Makefile was adjusted to use PATH-based tools:
-
-```make
-IVERILOG ?= iverilog
-VVP      ?= vvp
-```
-
-Passing tests:
-
-- timer test
-- SDRAM cache test
-
-The timer test covers reset defaults, register access, frequency selection, IRQ assertion/acknowledge, disable behavior, and DTACK.
-
-The cache test covers representative reads and writes.
-
-Both can emit VCD waveforms.
-
-## Waveform Viewer
-
-Surfer works well on macOS.
-
-Typical flow:
+A minimal ROM program executed through the real Mackerel-F integration and produced:
 
 ```text
-RTL
- -> Icarus or Verilator
- -> VCD
- -> Surfer
+Hi\r\n
 ```
 
-## Icarus vs Verilator
+through the 16550 UART path.
 
-Icarus is excellent for small unit tests but cannot elaborate fx68k's SystemVerilog unpacked structs.
+That proved the important chain:
 
-Verilator successfully builds the full Mackerel-F + fx68k design when used with:
+```text
+rom.hex
+    ->
+fx68k
+    ->
+68000 bus
+    ->
+memory-mapped output device
+    ->
+host-visible result
+```
+
+This is enough evidence to proceed with a smaller standalone survey machine.
+
+## Current Tool Baseline
+
+### Verilator
+
+Use Verilator for full fx68k system simulation.
+
+Known useful options:
 
 ```text
 --binary
@@ -51,72 +46,98 @@ Verilator successfully builds the full Mackerel-F + fx68k design when used with:
 -Wno-UNOPTFLAT
 ```
 
-The generated executable is a native host program under `obj_dir/`.
+### Icarus Verilog
 
-## Full-System Milestone
+Icarus remains useful for small isolated RTL tests, but it is not the preferred simulator for the full fx68k system because of SystemVerilog compatibility limitations.
 
-A minimal ROM program was built that initializes the real Mackerel-F 16550 UART and transmits:
+### Surfer
 
-```text
-Hi\r\n
-```
+Surfer is the waveform viewer.
 
-The full path passed:
+Current flow:
 
 ```text
-68000 code in ROM
+Verilator
     ->
-fx68k
+native simulation executable
     ->
-Mackerel-F bus fabric
+console output + VCD
     ->
-16550 UART RTL
-    ->
-serial TX waveform
-    ->
-testbench decoder
-    ->
-Hi\r\n
+Surfer
 ```
-
-This is the first full-system 68k simulation milestone.
 
 ## VCD
 
-The full-system testbench can use:
+The testbench can request waveform output with:
 
 ```systemverilog
-$dumpfile("mackerel_f_tb.vcd");
-$dumpvars(0, mackerel_f_tb);
+$dumpfile("cisc68k.vcd");
+$dumpvars(0, cisc68k_tb);
 ```
 
-Build Verilator with `--trace-vcd`, run the generated executable, then open the resulting VCD with Surfer.
+and Verilator must be built with:
 
-## Bootloader Experiment
+```text
+--trace-vcd
+```
 
-Replacing the small ROM with the full Mackerel bootloader did not yet produce UART output.
+The waveform should be used to inspect the 68000-visible boundary:
 
-The Hi test proves CPU/ROM/UART operation; the remaining difference is the broader memory/system path, especially SDRAM.
+- address
+- data
+- AS
+- UDS/LDS
+- R/W
+- DTACK
+- BERR
+- FC0-FC2
+- IPL0-IPL2 when relevant
 
-A simple behavioral SDRAM model was started, but the bootloader path is not yet validated.
+## Standalone Simulator: Next Milestone
 
-This is not blocking the architecture survey. TX-only ROM programs are sufficient for the planned CISC labs.
+The next environment is intentionally smaller than Mackerel-F:
 
-## Current Baseline
+```text
+cisc68k.sv
+  |
+  +-- fx68k
+  +-- ROM
+  +-- RAM
+  +-- write-only MONITOR
+```
+
+First standalone sanity check:
+
+```text
+rom.hex
+    ->
+ROM
+    ->
+fx68k
+    ->
+68000 bus write
+    ->
+MONITOR
+    ->
+Hi
+```
+
+The same run should generate a useful VCD.
+
+## Current Status
 
 Known good:
 
-- native Apple-Silicon Mackerel cross toolchain
-- cleaned Mackerel-F firmware build
-- timer simulation
-- SDRAM-cache simulation
-- full fx68k + Mackerel-F Verilator build
-- UART TX full-system test
-- VCD + Surfer workflow
+- native Apple-Silicon 68k cross toolchain
+- fx68k full-system simulation under Verilator
+- host-visible output from 68000 code
+- VCD generation path
+- Surfer workflow
 
-Not required now:
+Next:
 
-- UART RX
-- interactive terminal
-- full bootloader simulation
-- FPGA hardware
+- build the standalone `cisc68k.sv` machine
+- replace Mackerel-F memory/peripheral complexity with simple ROM, RAM, and monitor models
+- use that machine for the architecture survey
+
+Mackerel-F remains a reference workspace, not the permanent simulation environment.
