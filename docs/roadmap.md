@@ -84,17 +84,20 @@ Capture instruction fetches, byte/word/long reads and writes, stack traffic, int
 
 ## 10 — Memory-Mapped I/O
 
-Use the Mackerel-F UART as the simplest visible peripheral.
+Use a deliberately simple write-only monitor register as the baseline peripheral.
 
-Milestone already demonstrated:
+Standalone milestone:
 
 ```text
 68000 program
-  -> memory-mapped 16550
-  -> serial TX
-  -> testbench decoder
-  -> Hi\r\n
+  -> memory-mapped monitor write
+  -> testbench/host console
+  -> Hi
 ```
+
+The earlier Mackerel-F 16550 UART experiment remains useful as proof that the full reference system works, but the standalone survey machine does not need UART behavior.
+
+Any later peripheral should exist only to expose a specific 68000 mechanism. Its internals may be simplified; its behavior at the 68000 boundary must remain correct for the experiment.
 
 ## 11 — C Compiler and ABI
 
