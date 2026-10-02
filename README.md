@@ -25,6 +25,8 @@ The goal is architectural understanding: programming model, instruction encoding
 - [Reference RTL environment](docs/environment.md)
 - [macOS toolchain build](docs/macos-toolchain.md)
 - [Simulation checkpoint](docs/simulation-checkpoint.md)
+- [Verilator cheat sheet](docs/verilator-cheatsheet.md)
+- [Surfer cheat sheet](docs/surfer-cheatsheet.md)
 
 ## Credits
 
