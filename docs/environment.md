@@ -1,22 +1,14 @@
-# Reference RTL Environment
+# Environment
 
 ## Core Decision
 
-Use **fx68k as the reference 68000 core** and **Mackerel-F as a known-good reference integration**, not as the final survey workspace.
+Use **fx68k as the reference 68000 core**.
 
-Mackerel-F is valuable because it shows a working memory map, UART path, timer, interrupt logic, and firmware/toolchain integration. However, the preferred long-term environment is a cleaner, self-contained RTL + testbench workspace containing only what the 68k survey needs.
+Use **Mackerel-F as a known-good reference workspace**, not as the permanent survey machine.
 
-Primary rule:
+Build our own **standalone simulation workspace** around fx68k for the actual architecture survey.
 
-> Reuse proven Mackerel-F ideas and modules where useful, but keep the survey environment simpler than the full Mackerel system.
-
-The CPU core is treated as a black box. We care about architectural state, instruction execution, bus transactions, exceptions, interrupts, and timing visible at the CPU boundary.
-
-## Reference Core
-
-fx68k is a SystemVerilog, cycle-accurate 68000-compatible core intended to reproduce the original external bus behavior closely.
-
-For this project, its value is the visible 68000 boundary:
+The CPU core is treated as a black box unless an architectural question requires looking inside it. The main observation boundary is the original 68000 interface:
 
 ```text
 address/data
@@ -25,52 +17,19 @@ UDS/LDS
 R/W
 DTACK
 BERR
-FC
-IPL
+FC0-FC2
+IPL0-IPL2
 ```
 
-We do not need to study its internal RTL implementation.
+The project studies 68000 behavior, not peripheral implementation.
 
-## Mackerel-F as Reference
+---
 
-Mackerel-F already provides:
+## Mackerel Reference Workspace
 
-- fx68k integration
-- ROM / BSRAM / SDRAM path
-- UART
-- timer
-- interrupt logic
-- SPI and other peripherals
-- memory map and glue logic
+Keep the full upstream `mackerel-68k` repository available as reference material.
 
-Conceptually:
-
-```text
-                 +------------------+
-                 |      68000       |
-                 |      fx68k       |
-                 +---------+--------+
-                           |
-                     CPU bus boundary
-                           |
-          +----------------+----------------+
-          |                |                |
-        memory            UART            timer
-          |                                 |
-          +----------------+----------------+
-                           |
-                     RTL simulator
-                           |
-                    VCD + console
-```
-
-Extra Mackerel-F peripherals may remain present; they do not need to be removed merely for minimalism.
-
-## Repository Choice
-
-Keep the full upstream `mackerel-68k` tree available as reference material.
-
-Important areas:
+Useful areas:
 
 ```text
 firmware/
@@ -78,14 +37,26 @@ pld/mackerel-f/
 pld/mackerel-f/cores/fx68k/
 ```
 
-Mackerel-F fetches its external cores with:
+Mackerel-F provides a proven integration of:
+
+- fx68k
+- ROM
+- BSRAM / SDRAM
+- UART
+- timer
+- interrupts
+- SPI and other peripherals
+- address decoding and bus glue
+- firmware/toolchain integration
+
+Its external cores are fetched with:
 
 ```bash
 cd pld/mackerel-f
 ./get_cores.sh
 ```
 
-Expected cores:
+Typical fetched cores:
 
 ```text
 fx68k
@@ -94,18 +65,41 @@ tiny_spi
 uart16550
 ```
 
-A separate standalone fx68k clone is unnecessary for normal work.
+Mackerel-F has already served its main purpose for this project:
 
-## Hardware
+- prove fx68k can be integrated into a working system
+- provide examples of reset, ROM, memory, UART, timer, and interrupt wiring
+- provide a working 68k firmware/toolchain reference
+- provide a known-good comparison point when our standalone environment behaves unexpectedly
 
-Tang Nano 20K is optional only. FPGA deployment is not part of the current survey requirement.
+We do **not** need to reproduce its complete machine.
 
-Simulation is the primary platform.
+Tang Nano 20K hardware remains optional. The survey is simulation-first.
 
+---
 
-## Preferred Survey Workspace
+## Standalone Survey and Simulation Workspace
 
-The eventual survey repo should contain a clean simulation-oriented environment rather than depend on the full Mackerel project layout.
+The permanent survey environment should be small, explicit, and easy to understand.
+
+### Top Level
+
+The architectural top module is:
+
+```text
+cisc68k.sv
+```
+
+Its responsibilities are limited to:
+
+- instantiate fx68k
+- define the 24-bit memory map
+- decode address regions
+- connect ROM, RAM, and simple experiment peripherals
+- route the 68000 bus
+- generate or route DTACK
+- expose BERR, FC0-FC2, IPL0-IPL2, and other signals when required
+- keep all behavior visible at the 68000 boundary correct
 
 Baseline machine:
 
@@ -123,19 +117,17 @@ Baseline machine:
                               +--> host text output
 ```
 
-The monitor is a single write-only memory-mapped register. It is not intended to model a UART.
-
-Target repository shape:
+### Initial Repository Shape
 
 ```text
 rtl/
     fx68k/
+    cisc68k.sv
     rom.sv
     ram.sv
     monitor.sv
-    system.sv
 tb/
-    system_tb.sv
+    cisc68k_tb.sv
 rom/
     tiny survey programs
 tools/
@@ -144,88 +136,17 @@ docs/
 Makefile
 ```
 
-The first standalone sanity check is:
-
-```text
-rom.hex
-    ->
-ROM
-    ->
-fx68k
-    ->
-68000 bus write
-    ->
-MONITOR
-    ->
-"Hi"
-```
-
-followed by VCD inspection in Surfer.
-
-### Peripheral Rule
-
-A peripheral only needs as much internal behavior as required by the experiment.
-
-However, everything visible at the 68000 boundary must be faithful enough for the architectural question being studied:
-
-- address decoding
-- data width and byte lanes
-- read/write direction
-- DTACK timing
-- BERR behavior where relevant
-- IPL levels where relevant
-- interrupt acknowledge behavior where relevant
-- vector behavior where relevant
-
-Therefore, a timer used to study interrupts can be trivial internally, while its interrupt assertion and 68000 acknowledge behavior must be correct.
-
-Mackerel-F remains a reference for proven integration details; it does not define the permanent survey architecture.
-
-
-## Top-Level Machine Definition
-
-The standalone survey machine is defined by:
-
-```text
-cisc68k.sv
-```
-
-This is the architectural top level for the project.
-
-Its responsibilities are deliberately small:
-
-- instantiate fx68k
-- define the 24-bit memory map
-- decode address regions
-- connect ROM, RAM, and the write-only monitor
-- route the 68000 bus signals
-- generate/route DTACK and other bus termination signals
-- expose and observe FC0-FC2 where relevant
-- connect later experiment peripherals only when a survey topic requires them
-
-Initial structure:
-
-```text
-cisc68k.sv
-  |
-  +-- fx68k
-  +-- rom.sv
-  +-- ram.sv
-  +-- monitor.sv
-```
-
-Later additions should be narrow and experiment-driven:
-
-```text
-  +-- timer.sv
-  +-- irq_source.sv
-  +-- berr_device.sv
-  +-- waitstate_device.sv
-```
+The exact layout can evolve, but the top-level machine should remain obvious.
 
 ### Initial Memory Map
 
-Use a simple, human-readable map:
+The 68000 has a 24-bit byte address space:
+
+```text
+0x000000 - 0xFFFFFF
+```
+
+Initial map:
 
 ```text
 0x000000 - 0x00FFFF   ROM
@@ -234,23 +155,113 @@ Use a simple, human-readable map:
 0xF10000 - 0xFFFFFF   reserved for future experiments
 ```
 
-The exact sizes may be adjusted if an experiment requires it, but the map should remain simple and explicit.
+ROM contains reset vectors and survey code and is loaded from:
 
-### Function Codes
+```text
+rom.hex
+```
 
-`FC0-FC2` are outputs from the 68000 that describe the type of current bus access.
+RAM is plain scratch memory for:
 
-They are not generic peripheral inputs that every device must implement.
+- stack
+- data
+- temporary storage
 
-Instead, `cisc68k.sv` should make them available to decode or special peripheral logic when the architectural experiment requires them.
+No SDRAM controller or cache is required.
+
+### Monitor
+
+The baseline I/O device is a single write-only memory-mapped monitor register.
+
+Example behavior:
+
+```text
+write byte 'H' -> host prints H
+write byte 'i' -> host prints i
+```
+
+It is intentionally **not** a UART.
+
+First standalone sanity check:
+
+```text
+rom.hex
+   ->
+ROM
+   ->
+fx68k
+   ->
+68000 bus write
+   ->
+MONITOR
+   ->
+Hi
+```
+
+The same run should generate a VCD for inspection in Surfer.
+
+### Peripheral Rule
+
+Add a peripheral only when it helps answer a 68000 architecture question.
 
 Examples:
 
-- distinguishing user vs supervisor access
-- distinguishing program vs data access
-- identifying CPU-space cycles
-- recognizing interrupt-acknowledge cycles where `FC=111`
+```text
+timer              -> interrupt behavior
+irq_source         -> IPL / acknowledge / vectors
+waitstate_device   -> DTACK and wait states
+berr_device        -> bus-error exception
+input register     -> memory-mapped read behavior
+```
 
-This keeps function-code handling faithful at the 68000 boundary without adding unnecessary peripheral complexity.
+Peripheral internals may be deliberately simple.
 
-> `cisc68k.sv` defines the architectural boundary of the simulated 68000 machine.
+What must be correct is the behavior visible at the **68000 boundary**, including where relevant:
+
+- address decoding
+- data width
+- UDS/LDS byte lanes
+- read/write direction
+- DTACK timing
+- BERR behavior
+- IPL levels
+- interrupt acknowledge
+- vector behavior
+- function-code interpretation
+
+The project studies the 68000, not the peripherals.
+
+### Function Codes
+
+`FC0-FC2` are outputs from the CPU describing the current bus address space.
+
+They are not features every peripheral must implement.
+
+`cisc68k.sv` should expose them to decode or experiment logic only when needed, for example:
+
+- user vs supervisor accesses
+- program vs data accesses
+- CPU-space cycles
+- interrupt-acknowledge cycles where `FC=111`
+
+### Simulation Flow
+
+Use Verilator for the standalone full-system simulator.
+
+```text
+68k source
+    ->
+cross assembler/compiler
+    ->
+rom.hex
+    ->
+cisc68k.sv + fx68k
+    ->
+Verilator
+    ->
+console result + VCD
+    ->
+Surfer
+```
+
+The first goal is not a complete computer. It is a transparent machine in which each 68000-visible transaction is easy to explain.
