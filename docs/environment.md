@@ -2,11 +2,13 @@
 
 ## Core Decision
 
-Use Mackerel-F as the reference system and fx68k as the reference 68000 core.
+Use **fx68k as the reference 68000 core** and **Mackerel-F as a known-good reference integration**, not as the final survey workspace.
+
+Mackerel-F is valuable because it shows a working memory map, UART path, timer, interrupt logic, and firmware/toolchain integration. However, the preferred long-term environment is a cleaner, self-contained RTL + testbench workspace containing only what the 68k survey needs.
 
 Primary rule:
 
-> Reuse the existing system unless a concrete architecture question requires a change.
+> Reuse proven Mackerel-F ideas and modules where useful, but keep the survey environment simpler than the full Mackerel system.
 
 The CPU core is treated as a black box. We care about architectural state, instruction execution, bus transactions, exceptions, interrupts, and timing visible at the CPU boundary.
 
@@ -29,7 +31,7 @@ IPL
 
 We do not need to study its internal RTL implementation.
 
-## Reference System
+## Mackerel-F as Reference
 
 Mackerel-F already provides:
 
@@ -99,3 +101,40 @@ A separate standalone fx68k clone is unnecessary for normal work.
 Tang Nano 20K is optional only. FPGA deployment is not part of the current survey requirement.
 
 Simulation is the primary platform.
+
+
+## Preferred Survey Workspace
+
+The eventual survey repo should contain a clean simulation-oriented environment rather than depend on the full Mackerel project layout.
+
+Target shape:
+
+```text
+rtl/
+    fx68k/
+    selected support RTL
+tb/
+    cpu/system testbenches
+rom/
+    tiny survey programs
+tools/
+    helper scripts
+docs/
+Makefile
+```
+
+The workspace should support a simple loop:
+
+```text
+build tiny 68k program
+    ->
+load ROM image
+    ->
+run Verilator
+    ->
+print UART TX
+    ->
+inspect VCD in Surfer
+```
+
+Mackerel-F remains the reference for correctness and useful implementation details; it does not need to remain the permanent execution environment.
