@@ -14,6 +14,143 @@ For unit tests:
 surfer timer.vcd
 ```
 
+## Commands and Shortcuts
+
+Surfer has both direct keyboard shortcuts and a command prompt.
+
+Press **Space** to open the command prompt, then type a command name. Fuzzy matching is supported, so partial names are often enough.
+
+### Zoom and horizontal navigation
+
+| Action | Shortcut | Command |
+| --- | --- | --- |
+| Zoom in | `+` or `=` | `zoom_in` |
+| Zoom out | `-` | `zoom_out` |
+| Zoom to fit entire trace | `Shift+F` | `zoom_fit` |
+| Zoom toward cursor | `Shift+Z` | — |
+| Go to start | `S` | `goto_start` |
+| Go to end | `E` | `goto_end` |
+| Go to exact time | `Command+G` | `goto_time <TIME>` |
+| Zoom to exact range | — | `zoom_to <START> <END>` |
+
+Examples:
+
+```text
+Space
+goto_time 100us
+```
+
+```text
+Space
+zoom_to 10us 20us
+```
+
+Mouse/trackpad:
+
+- ordinary horizontal scroll pans the waveform
+- **Ctrl + scroll** zooms the waveform
+- cursor position is set by clicking in the waveform area
+
+### Cursor and transitions
+
+By default, Surfer can use the arrow keys to move between transitions of the focused signal. This behavior is configurable.
+
+Useful commands:
+
+```text
+transition_next
+transition_previous
+goto_cursor
+cursor_set 125us
+```
+
+For architecture work, focusing a bus/control signal and stepping transition-by-transition is often the fastest way to inspect one 68000 cycle.
+
+### Markers and measurements
+
+| Action | Shortcut / command |
+| --- | --- |
+| Add marker at cursor | `M` |
+| Set numbered marker 0–9 | `Command+0` … `Command+9` on macOS |
+| Center view on numbered marker | `0` … `9` |
+| Open marker/delta window | `Space` → `show_marker_window` |
+| Set named/numbered marker | `marker_set <NAME>` or `marker_set #N` |
+| Go to marker | `goto_marker <NAME>` or `goto_marker #N` |
+
+Markers are useful for measuring:
+
+- AS assertion → DTACK assertion
+- start bit → stop bit
+- exception entry → vector fetch
+- interrupt assertion → acknowledge cycle
+
+### Signal list / hierarchy navigation
+
+| Action | Shortcut |
+| --- | --- |
+| Focus variable quickly | `F` |
+| Focus variable-name filter/search | `V` |
+| Toggle selection of focused signal | `A` |
+| Select all | `Command+A` |
+| Delete selected waveform items | `Delete` or `X` |
+| Rename item | `F2` |
+| Add divider | `D` |
+| Toggle side panel | `B` |
+| Scroll signal list up | `PageUp` |
+| Scroll signal list down | `PageDown` |
+
+Additional keyboard navigation shown by Surfer's built-in help:
+
+```text
+j / Down Arrow       scroll down
+k / Up Arrow         scroll up
+Alt+j / Alt+Down     move focus down
+Alt+k / Alt+Up       move focus up
+Ctrl+j / Ctrl+Down   move focused item down
+Ctrl+k / Ctrl+Up     move focused item up
+```
+
+### File and view controls
+
+| Action | Shortcut |
+| --- | --- |
+| Open waveform | `Command+O` |
+| Switch waveform while keeping view | `Command+Shift+O` |
+| Reload waveform | `R` |
+| Save state | `Command+S` |
+| Undo | `Command+Z` or `U` |
+| Redo | `Command+Shift+Z` or `Command+Y` |
+| Toggle toolbar | `T` |
+| Toggle menu | `Alt+M` |
+
+### Built-in help
+
+From the command prompt:
+
+```text
+show_controls
+show_mouse_gestures
+show_quick_start
+```
+
+These are useful because Surfer's shortcuts are configurable, and the built-in help reflects the current configuration.
+
+### Handy command-prompt examples
+
+```text
+zoom_fit
+zoom_in
+zoom_out
+goto_start
+goto_end
+goto_time 250us
+zoom_to 100us 120us
+cursor_set 110us
+transition_next
+transition_previous
+show_marker_window
+```
+
 ## What to Look At First
 
 For 68000 architecture work, useful signal groups include:
