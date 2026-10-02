@@ -11,9 +11,9 @@ m68k-mackerel-elf-objcopy
 
 and links against both `-lc` and `-lgcc`.
 
-## Why Homebrew m68k-elf-gcc Was Not Enough
+## Generic Homebrew Toolchain vs Mackerel Toolchain
 
-Homebrew's generic toolchain provided GCC, binutils, and libgcc, but no target libc/Newlib:
+Homebrew's generic `m68k-elf-gcc` provided GCC, binutils, and libgcc, but no target libc/Newlib:
 
 ```bash
 m68k-elf-gcc -print-file-name=libc.a
@@ -27,11 +27,13 @@ libc.a
 
 rather than a real path.
 
-Therefore the generic toolchain could not link the complete Mackerel firmware.
+For the **68k architecture survey itself**, this is not necessarily a problem. Small bare-metal assembly programs and freestanding C tests can be built without Newlib, and that is likely sufficient for many survey labs.
 
-## Solution: crosstool-NG
+The full Mackerel firmware does link against `-lc`, so reproducing that firmware required a complete toolchain with Newlib. We built the project-specific `m68k-mackerel-elf` toolchain successfully, so it is now the settled toolchain for this workspace even though Newlib is not a survey requirement.
 
-Use Mackerel's supplied:
+## Settled Toolchain: crosstool-NG Build
+
+Mackerel's supplied configuration was used:
 
 ```text
 tools/mackerel_crosstools_baremetal_defconfig
