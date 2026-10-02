@@ -107,14 +107,35 @@ Simulation is the primary platform.
 
 The eventual survey repo should contain a clean simulation-oriented environment rather than depend on the full Mackerel project layout.
 
-Target shape:
+Baseline machine:
+
+```text
+              +---------+
+              |  fx68k  |
+              +----+----+
+                   |
+             68000 bus boundary
+                   |
+        +----------+----------+
+        |          |          |
+       ROM        RAM      MONITOR
+                              |
+                              +--> host text output
+```
+
+The monitor is a single write-only memory-mapped register. It is not intended to model a UART.
+
+Target repository shape:
 
 ```text
 rtl/
     fx68k/
-    selected support RTL
+    rom.sv
+    ram.sv
+    monitor.sv
+    system.sv
 tb/
-    cpu/system testbenches
+    system_tb.sv
 rom/
     tiny survey programs
 tools/
@@ -123,18 +144,39 @@ docs/
 Makefile
 ```
 
-The workspace should support a simple loop:
+The first standalone sanity check is:
 
 ```text
-build tiny 68k program
+rom.hex
     ->
-load ROM image
+ROM
     ->
-run Verilator
+fx68k
     ->
-print UART TX
+68000 bus write
     ->
-inspect VCD in Surfer
+MONITOR
+    ->
+"Hi"
 ```
 
-Mackerel-F remains the reference for correctness and useful implementation details; it does not need to remain the permanent execution environment.
+followed by VCD inspection in Surfer.
+
+### Peripheral Rule
+
+A peripheral only needs as much internal behavior as required by the experiment.
+
+However, everything visible at the 68000 boundary must be faithful enough for the architectural question being studied:
+
+- address decoding
+- data width and byte lanes
+- read/write direction
+- DTACK timing
+- BERR behavior where relevant
+- IPL levels where relevant
+- interrupt acknowledge behavior where relevant
+- vector behavior where relevant
+
+Therefore, a timer used to study interrupts can be trivial internally, while its interrupt assertion and 68000 acknowledge behavior must be correct.
+
+Mackerel-F remains a reference for proven integration details; it does not define the permanent survey architecture.
