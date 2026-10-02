@@ -25,3 +25,13 @@ The goal is architectural understanding: programming model, instruction encoding
 - [Reference RTL environment](docs/environment.md)
 - [macOS toolchain build](docs/macos-toolchain.md)
 - [Simulation checkpoint](docs/simulation-checkpoint.md)
+
+## Credits
+
+This project builds on the work of:
+
+- [fx68k](https://github.com/ijor/fx68k) by Jorge Cwik — a cycle-accurate SystemVerilog 68000 core used as the CPU reference.
+- [Mackerel-68k](https://github.com/crmaykish/mackerel-68k) by Colin Maykish — especially Mackerel-F, which provides a valuable working reference for fx68k integration, memory mapping, UART, timer, interrupts, firmware, and toolchain setup.
+- ChatGPT by OpenAI — used as a study partner for architecture planning, debugging, experiment design, documentation, and keeping the survey focused on architectural understanding rather than turning into a retro-computer project.
+
+All credit for the original upstream RTL and software remains with their respective authors and licenses.
