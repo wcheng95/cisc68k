@@ -60,4 +60,16 @@ Before adding anything, ask:
 2. Can the existing environment answer the question already?
 3. Are we drifting into building a retro computer instead of studying the CPU?
 
-A TX-only UART is enough for most survey experiments. Interactive RX is not a requirement.
+The baseline machine does not require a UART at all. A single write-only monitor register is enough to print test output.
+
+Peripherals are introduced only when they help expose a 68000 mechanism. Their internal implementation may be deliberately simple, but their behavior at the **68000-visible boundary must be correct**.
+
+Examples:
+
+- monitor register -> observe memory-mapped writes
+- simple timer -> study interrupts
+- programmable DTACK delay -> study wait states
+- BERR generator -> study bus-error handling
+- simple interrupt source -> study IPL, acknowledge, vectors, and RTE
+
+The project studies the 68000, not the peripherals.
