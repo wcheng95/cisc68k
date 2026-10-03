@@ -2,3 +2,5 @@ logs/
 build/
 obj_dir/
 *.vcd
+microrom.mem
+nanorom.mem
