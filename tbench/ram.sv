@@ -31,7 +31,7 @@ module ram #(
             rdata = 16'hffff;
     end
 
-    always_ff @(posedge clk) begin
+    always @(posedge clk) begin
         if (sel && !ASn && !RWn) begin
             if (!UDSn)
                 mem[index][15:8] <= wdata[15:8];
