@@ -1,18 +1,91 @@
-# Common Lab Startup
+# Common Startup
 
-This directory contains the small pieces shared by the cisc68k labs.
+This directory contains the startup pieces shared by the cisc68k labs.
 
-For now, the most important file is:
+The main goal of this README is to distinguish four things that often look similar in startup code:
 
-```text
-start.S
-```
+- what the 68000 architecture defines
+- what GNU assembler defines
+- what GNU linker defines
+- what is merely a convention or project choice
 
-It provides the minimum 68000 reset vectors and startup code needed to enter a C `main()` function.
+It also distinguishes what we need now from what belongs later.
+
+---
+
+# Legend
+
+## Source of the rule
+
+\`\`\`text
+[68K]   Motorola 68000 architecture
+
+[ASM]   GNU assembler syntax/directive
+
+[LD]    GNU linker-script syntax/command
+
+[CONV]  Convention or project choice
+        The name/value could change if all dependent pieces changed with it
+\`\`\`
+
+## When we need it
+
+\`\`\`text
+[NOW]    Required by the current labs
+
+[LATER]  Not required yet; likely useful in later labs
+
+[OPT]    Optional convenience
+\`\`\`
+
+Example:
+
+\`\`\`text
+.long _start
+
+.long      [ASM]
+_start     [CONV]
+PC vector  [68K] [NOW]
+\`\`\`
+
+The CPU does not know what \`.long\` or \`_start\` means. It only sees four bytes at address \`0x000004\`, interprets them as the initial PC, and begins executing there.
+
+---
+
+# Big Picture
+
+\`\`\`text
+RESET                                      [68K]
+  |
+  +--> longword at 0x000000 -> initial SP [68K] [NOW]
+  |
+  +--> longword at 0x000004 -> initial PC [68K] [NOW]
+                                   |
+                                   v
+                                _start     [CONV] [NOW]
+                                   |
+                                   v
+                                jsr main   [68K] [NOW]
+                                   |
+                                   v
+                                main()     [CONV] [NOW]
+                                   |
+                                   v
+                                  RTS      [68K]
+                                   |
+                                   v
+                               bra.s 1b    [68K]
+\`\`\`
+
+Assembler and linker syntax exists only to arrange bytes so the 68000 sees the required values at the required addresses.
+
+---
+
+# start.S
 
 Current file:
 
-```asm
+\`\`\`asm
 .section .vectors,"a"
     .long   0x00020000
     .long   _start
@@ -26,359 +99,286 @@ _start:
 
 1:
     bra.s   1b
-```
+\`\`\`
 
-## Line by Line
+## \`.section .vectors,"a"\`
 
-### `.section .vectors,"a"`
+\`\`\`text
+.section   [ASM]
+.vectors   [CONV]
+"a"        [ASM]
+            [NOW]
+\`\`\`
 
-Select or create an assembler section named:
+\`.section\` tells the assembler to put following bytes into an input section.
 
-```text
-.vectors
-```
+The name \`.vectors\` is ours. The 68000 does not know that name. We could rename it if the linker script changed too.
 
-The linker script places this section at address:
+The \`a\` flag means allocatable: this section occupies space in the final image.
 
-```text
-0x000000
-```
-
-The flag:
-
-```text
-"a"
-```
-
-means the section is allocatable: it occupies memory in the final image.
-
-For the 68000, the first two longwords after reset are special:
-
-```text
-0x000000   initial supervisor stack pointer
-0x000004   initial program counter
-```
-
-So this section begins with exactly those two values.
+We need a dedicated section now because we must place the reset-vector bytes at address zero.
 
 ---
 
-### `.long 0x00020000`
+## \`.long 0x00020000\`
 
-Emit one 32-bit value:
+\`\`\`text
+.long          [ASM]
+0x00020000     [CONV]
+vector #0 role [68K]
+                [NOW]
+\`\`\`
 
-```text
+The 68000 defines:
+
+\`\`\`text
+longword at 0x000000 -> initial supervisor SP
+\`\`\`
+
+We chose the value:
+
+\`\`\`text
 0x00020000
-```
+\`\`\`
 
-This becomes the first reset vector.
+because RAM occupies:
 
-The 68000 loads it into its initial supervisor stack pointer during reset.
-
-Our RAM occupies:
-
-```text
+\`\`\`text
 0x010000 - 0x01FFFF
-```
+\`\`\`
 
-so:
+and the stack grows downward.
 
-```text
-0x00020000
-```
+The initial SP may sit one address above RAM because a push decrements SP before storing.
 
-is the first address immediately above RAM.
+For a longword push:
 
-Because the 68000 stack grows downward, the first stack write lands inside the top of RAM.
+\`\`\`text
+SP = 0x020000
+SP = SP - 4
+   = 0x01FFFC
+\`\`\`
 
-In Lab00 we observed stack accesses near:
+The stored longword occupies \`0x01FFFC-0x01FFFF\`.
 
-```text
-0x01FFFC
-0x01FFFE
-```
+Architecture requirement:
 
-when `JSR` saved its return address.
+\`\`\`text
+initial SP comes from 0x000000   [68K]
+\`\`\`
+
+Our choice:
+
+\`\`\`text
+SP value = 0x00020000            [CONV]
+\`\`\`
 
 ---
 
-### `.long _start`
+## \`.long _start\`
 
-Emit another 32-bit value.
+\`\`\`text
+.long       [ASM]
+_start      [CONV]
+vector #1   [68K]
+             [NOW]
+\`\`\`
 
-Instead of writing a numeric constant, this value is the address represented by the symbol:
+The 68000 defines:
 
-```text
-_start
-```
+\`\`\`text
+longword at 0x000004 -> initial PC
+\`\`\`
 
-The linker resolves that symbol.
+We chose the symbol name \`_start\`.
 
-This becomes the second reset vector, the initial program counter.
+The linker replaces that symbol with its numeric address. In Lab00:
 
-The linker script currently places the startup code beginning at:
+\`\`\`text
+_start = 0x00000100
+\`\`\`
 
-```text
-0x000100
-```
+Observed reset-vector words:
 
-so in Lab00 the CPU fetched:
-
-```text
-PC = 0x00000100
-```
-
-after reset.
-
-The first eight ROM bytes therefore represent:
-
-```text
-address   meaning
--------   --------------------------
-000000    initial SP, upper word
-000002    initial SP, lower word
-000004    initial PC, upper word
-000006    initial PC, lower word
-```
-
-For Lab00 they were observed as:
-
-```text
+\`\`\`text
 000000 -> 0002
 000002 -> 0000
-
 000004 -> 0000
 000006 -> 0100
-```
+\`\`\`
 
-which reconstructs:
+which reconstruct:
 
-```text
+\`\`\`text
 SP = 0x00020000
 PC = 0x00000100
-```
+\`\`\`
 
 ---
 
-### `.section .text.start,"ax"`
+## \`.section .text.start,"ax"\`
 
-Switch to another section named:
+\`\`\`text
+.section       [ASM]
+.text.start    [CONV]
+"a" / "x"      [ASM]
+                [NOW]
+\`\`\`
 
-```text
-.text.start
-```
+Switch to an input section named \`.text.start\`.
 
-The section flags are:
+Flags:
 
-```text
+\`\`\`text
 a   allocatable
 x   executable
-```
+\`\`\`
 
-The linker script deliberately places `.text.start` before the rest of the program text.
+The section name is our convention.
 
-This makes the startup entry point easy to locate and keeps it separate from ordinary C-generated code.
-
----
-
-### `.global _start`
-
-Make the symbol:
-
-```text
-_start
-```
-
-visible to the linker.
-
-Without this declaration, `_start` would normally remain local to this assembly file.
-
-The linker script also contains:
-
-```text
-ENTRY(_start)
-```
-
-so `_start` is the ELF entry symbol as well as the address stored in the 68000 reset vector.
-
-For the simulated 68000, the reset vector is what actually determines where execution starts.
+The linker places this section before ordinary program text so the startup entry is easy to find and control.
 
 ---
 
-### `.extern main`
+## \`.global _start\`
 
-Declare that:
+\`\`\`text
+.global   [ASM]
+_start    [CONV]
+           [NOW]
+\`\`\`
 
-```text
-main
-```
+Make \`_start\` visible to the linker.
 
-is defined somewhere else.
+The name is arbitrary. We could use \`reset_entry\` if the vector and linker script used the same symbol.
 
-In our labs, it is supplied by the lab C file, for example:
+---
 
-```text
+## \`.extern main\`
+
+\`\`\`text
+.extern   [ASM]
+main      [CONV]
+           [NOW]
+\`\`\`
+
+Declare that \`main\` is defined elsewhere.
+
+For Lab00 it comes from:
+
+\`\`\`text
 labs/lab00/lab00.c
-```
+\`\`\`
 
-The assembler therefore leaves a relocation for the linker to resolve.
-
----
-
-### `_start:`
-
-Define the symbol:
-
-```text
-_start
-```
-
-at the current location.
-
-This is the address placed into the reset PC vector.
-
-For Lab00 it is:
-
-```text
-0x000100
-```
+\`main\` is a C/toolchain convention, not a 68000 requirement.
 
 ---
 
-### `jsr main`
+## \`_start:\`
 
-Execute:
+\`\`\`text
+_start   [CONV]
+:        [ASM syntax]
+          [NOW]
+\`\`\`
 
-```text
-JSR = Jump to SubRoutine
-```
+Define the symbol \`_start\` at the current location.
 
-The CPU transfers execution to `main`.
+Because the linker places \`.text.start\` at \`0x000100\`:
 
-Unlike a plain jump, `JSR` also saves a return address on the stack.
+\`\`\`text
+_start = 0x000100
+\`\`\`
 
-In Lab00, the temporary bus trace showed writes near:
+---
 
-```text
+## \`jsr main\`
+
+\`\`\`text
+jsr    [68K]
+main   [CONV]
+        [NOW]
+\`\`\`
+
+\`JSR\` is a 68000 instruction: Jump to SubRoutine.
+
+It saves a return address on the stack and transfers control to \`main\`.
+
+Lab00 observed the return address written near:
+
+\`\`\`text
 0x01FFFC
 0x01FFFE
-```
+\`\`\`
 
-followed later by reads from the same locations when `main` returned.
-
-That is our first visible example of the 68000 stack and subroutine mechanism.
-
-At this stage, `start.S` does not initialize a C runtime.
-
-It does not:
-
-- copy initialized data from ROM to RAM
-- clear `.bss`
-- initialize constructors
-- call an operating system
-- provide libc startup
-
-Lab00 does not require any of those things.
+The CPU does not require startup to call \`main\`; that is our software design.
 
 ---
 
-### `1:`
+## \`1:\`
 
-Define a local numeric label named:
+\`\`\`text
+1:   [ASM]
+     [OPT]
+\`\`\`
 
-```text
-1
-```
+A GNU assembler numeric local label.
 
-Numeric labels are convenient for short local assembly branches because they can be reused elsewhere in the file.
+It has no CPU meaning.
+
+It may be referenced as:
+
+\`\`\`text
+1b   nearest label 1 backward
+1f   nearest label 1 forward
+\`\`\`
 
 ---
 
-### `bra.s 1b`
+## \`bra.s 1b\`
 
-`BRA` means unconditional branch.
+\`\`\`text
+bra    [68K]
+.s     [ASM syntax selecting short encoding]
+1b     [ASM local-label syntax]
+        [NOW]
+\`\`\`
 
-The suffix:
+\`BRA\` is an unconditional 68000 branch.
 
-```text
-.s
-```
+This loops forever if \`main()\` returns:
 
-selects the short branch encoding.
-
-The operand:
-
-```text
-1b
-```
-
-means:
-
-```text
-the nearest label "1" backward from here
-```
-
-So this instruction branches back to itself forever:
-
-```text
+\`\`\`asm
 1:
     bra.s 1b
-```
+\`\`\`
 
-This is where execution goes if `main()` returns.
+There is no OS or caller above \`_start\`, so we need a safe destination after \`main\`.
 
-There is nowhere else for a bare-metal program to return to.
+---
 
-In Lab00, `main()` writes:
+# What start.S Does Not Do Yet
 
-```text
-Hi
-```
+\`\`\`text
+clear .bss                     [LATER]
+copy initialized .data to RAM  [LATER]
+install exception handlers     [LATER]
+configure interrupts           [LATER]
+switch to user mode            [LATER]
+create a separate user stack   [LATER]
+initialize libc/Newlib         [LATER]
+run C++ constructors           [LATER]
+\`\`\`
 
-to the monitor and returns. The testbench finishes the simulation when it sees the newline, so the infinite loop exists mainly to give the CPU a valid destination after `main`.
+These are common startup responsibilities in larger systems, but they would hide the basic reset path if added now.
 
-## Reset-to-main Flow
+---
 
-The complete startup path is:
-
-```text
-RESET
-  |
-  +--> read longword at 0x000000
-  |      -> SP = 0x00020000
-  |
-  +--> read longword at 0x000004
-         -> PC = _start = 0x00000100
-                    |
-                    v
-                jsr main
-                    |
-                    v
-                C main()
-                    |
-                    v
-                  RTS
-                    |
-                    v
-                bra.s 1b
-```
-
-This startup file is intentionally minimal. As later labs require more C runtime behavior, we should add only what those labs actually need.
-
-
-# Linker Script: `link.ld`
-
-The second shared startup file is:
-
-```text
-link.ld
-```
-
-It tells the linker where each program section belongs in the 68000 address space.
+# link.ld
 
 Current file:
 
-```ld
+\`\`\`ld
 OUTPUT_ARCH(m68k)
 ENTRY(_start)
 
@@ -420,452 +420,474 @@ SECTIONS
         *(.eh_frame*)
     }
 }
-```
+\`\`\`
 
-## Line by Line
+## \`OUTPUT_ARCH(m68k)\`
 
-### `OUTPUT_ARCH(m68k)`
+\`\`\`text
+OUTPUT_ARCH   [LD]
+m68k          [LD target identifier]
+               [OPT]
+\`\`\`
 
-Tell the linker that the output file targets the Motorola 68k architecture.
+Tell GNU ld that the output ELF targets m68k.
 
-This helps the linker reject incompatible object files and produce an ELF file with the correct architecture metadata.
+Useful for ELF metadata and compatibility checking.
 
-It does **not** choose where execution begins and does not define the memory map.
-
----
-
-### `ENTRY(_start)`
-
-Set the ELF entry-point symbol to:
-
-```text
-_start
-```
-
-The linker resolves the address of `_start` and records that address in the ELF header.
-
-For our bare 68000 simulation, this ELF entry field is not what causes the CPU to begin at `_start`.
-
-The CPU actually starts there because the reset vector at address `0x000004` contains the address of `_start`.
-
-So these are related but separate:
-
-```text
-ENTRY(_start)
-    -> ELF/toolchain entry point
-
-.long _start at vector 1
-    -> actual 68000 reset PC
-```
+The 68000 itself never sees this text.
 
 ---
 
-### `SECTIONS`
+## \`ENTRY(_start)\`
 
-Begin the section-placement part of the linker script.
+\`\`\`text
+ENTRY    [LD]
+_start   [CONV]
+          [OPT for CPU reset]
+\`\`\`
 
-Inside this block we decide where assembler/compiler sections are placed in the final address space.
+Set the ELF entry point to \`_start\`.
 
----
+Important:
 
-### `. = 0x000000;`
+\`\`\`text
+ENTRY(_start)                 -> ELF/tool metadata [LD]
+.long _start at 0x000004      -> actual reset PC   [68K]
+\`\`\`
 
-Set the linker location counter `.` to:
-
-```text
-0x000000
-```
-
-The location counter means:
-
-> the address where the next output bytes will be placed.
-
-So the next output section begins at address zero unless that section explicitly specifies another address.
+The 68000 starts from the reset vector, not from the ELF header.
 
 ---
 
-### `.vectors :`
+## \`SECTIONS\`
 
-Create an output section named:
+\`\`\`text
+SECTIONS   [LD]
+            [NOW]
+\`\`\`
 
-```text
-.vectors
-```
-
-Because the current location counter is `0x000000`, this output section starts there.
+Begin the linker-script block that controls section placement.
 
 ---
 
-### `KEEP(*(.vectors))`
+## \`. = 0x000000;\`
 
-Collect every input section named:
+\`\`\`text
+.          [LD location counter]
+0x000000   [CONV chosen to satisfy 68K reset]
+            [NOW]
+\`\`\`
 
-```text
-.vectors
-```
+Set the linker location counter to zero.
 
-from all input object files and place them here.
+The next output section begins there.
 
-In our case, `start.S` creates one with:
+Why zero? Because the 68000 reset definition requires:
 
-```asm
-.section .vectors,"a"
-```
+\`\`\`text
+0x000000   initial SP
+0x000004   initial PC
+\`\`\`
 
-The wildcard:
+So the syntax is GNU ld-specific, but the address is driven by the CPU architecture.
 
-```text
-*
-```
+---
 
-means:
+## \`.vectors :\`
 
-> take matching sections from any input file.
+\`\`\`text
+.vectors   [CONV]
+:          [LD syntax]
+            [NOW]
+\`\`\`
 
-The outer `KEEP(...)` tells the linker not to remove this section even when section garbage collection is enabled.
+Create an output section called \`.vectors\`.
+
+Because the location counter is zero, it starts at \`0x000000\`.
+
+The section name is our choice; the address is architecture-driven.
+
+---
+
+## \`KEEP(*(.vectors))\`
+
+\`\`\`text
+KEEP       [LD]
+*          [LD wildcard]
+.vectors   [CONV]
+            [NOW because --gc-sections is enabled]
+\`\`\`
+
+Collect every input section named \`.vectors\` and prevent linker garbage collection from removing it.
 
 Our Makefile uses:
 
-```text
+\`\`\`text
 -Wl,--gc-sections
-```
+\`\`\`
 
-so without `KEEP`, an apparently unreferenced vector table could potentially be discarded.
-
-This is why the reset vectors remain in the ROM image even though normal C code does not reference them.
+So \`KEEP\` explicitly protects the vector table.
 
 ---
 
-### `. = 0x000100;`
+## \`. = 0x000100;\`
 
-Move the location counter forward to:
+\`\`\`text
+.          [LD]
+0x000100   [CONV]
+            [NOW]
+\`\`\`
 
-```text
-0x000100
-```
+Move the location counter to \`0x000100\`.
 
-The executable code therefore starts at or after this address.
+This gives:
 
-This leaves the range:
+\`\`\`text
+0x000000-0x000007   reset vectors
+0x000008-0x0000FF   unused for now
+0x000100...          startup/program code
+\`\`\`
 
-```text
-0x000008 - 0x0000FF
-```
-
-unused for now.
-
-We deliberately leave this gap because the first eight bytes hold the two reset vectors, and starting code at `0x100` makes the layout obvious while we are learning.
-
-There is nothing architecturally special about `0x100`; it is our chosen layout.
+There is nothing architecturally special about \`0x100\`.
 
 ---
 
-### `.text :`
+## \`.text :\`
 
-Create an output section named:
+\`\`\`text
+.text   [CONV]
+:       [LD syntax]
+         [NOW]
+\`\`\`
 
-```text
-.text
-```
+Create the final executable-code output section.
 
-This will contain executable code and read-only constants.
-
-Because the location counter was just set to `0x000100`, this section starts there.
-
----
-
-### `*(.text.start)`
-
-First, collect input sections named:
-
-```text
-.text.start
-```
-
-Our `start.S` uses:
-
-```asm
-.section .text.start,"ax"
-```
-
-Placing this first guarantees that startup code comes before ordinary generated code.
-
-That is why Lab00 resolves:
-
-```text
-_start = 0x000100
-```
+\`.text\` is a toolchain convention, not a CPU concept.
 
 ---
 
-### `*(.text*)`
+## \`*(.text.start)\`
 
-Collect all input sections whose names begin with:
+\`\`\`text
+*             [LD wildcard]
+.text.start   [CONV]
+               [NOW]
+\`\`\`
 
-```text
-.text
-```
+Place startup code first.
 
-Examples can include:
+This is why \`_start\` lands at the beginning of the code region.
 
-```text
+---
+
+## \`*(.text*)\`
+
+\`\`\`text
+*        [LD wildcard]
+.text*   [CONV pattern]
+          [NOW]
+\`\`\`
+
+Collect all executable input sections whose names begin with \`.text\`.
+
+Examples:
+
+\`\`\`text
 .text
 .text.main
 .text.foo
-.text.startup
-```
+\`\`\`
 
-Compilers often place functions into separate `.text.<name>` sections when options such as:
-
-```text
--ffunction-sections
-```
-
-are enabled.
-
-The wildcard ensures all such code sections are included.
+Our compiler uses \`-ffunction-sections\`, so functions may appear in separate \`.text.<name>\` sections.
 
 ---
 
-### `*(.rodata*)`
+## \`*(.rodata*)\`
 
-Collect all read-only-data sections.
+\`\`\`text
+.rodata*   [CONV]
+            [NOW]
+\`\`\`
 
-Typical examples include:
+Collect read-only data such as string literals and constant tables.
 
-```text
-.rodata
-.rodata.str1.1
-.rodata.constants
-```
-
-These contain things such as:
-
-- string literals
-- constant lookup tables
-- compiler-generated read-only constants
-
-For our simple ROM model, placing `.rodata` immediately after code means both execute directly from ROM.
+We place it in ROM after code.
 
 ---
 
-### `. = ALIGN(2);`
+## \`. = ALIGN(2);\`
 
-Advance the location counter if necessary so the next address is aligned to a 2-byte boundary.
+\`\`\`text
+ALIGN   [LD]
+2       [CONV driven by 68K alignment]
+         [NOW]
+\`\`\`
 
-For the original 68000, word and longword accesses must begin on even addresses.
+Move the location counter to the next even address if necessary.
 
-So 2-byte alignment is the natural minimum alignment for our data layout.
-
-For example:
-
-```text
-current address 0x000123
-ALIGN(2)
-    -> 0x000124
-```
-
-If the address is already even, nothing changes.
+The original 68000 requires word and longword accesses to begin on even addresses.
 
 ---
 
-### `.data :`
+## \`.data :\`
 
-Create the output section for initialized writable data.
+\`\`\`text
+.data   [CONV]
+         [LATER]
+\`\`\`
 
----
+Conventional section for initialized writable data, for example:
 
-### `*(.data*)`
-
-Collect input sections beginning with:
-
-```text
-.data
-```
-
-Normally these are C variables with an explicit nonzero initial value, for example:
-
-```c
+\`\`\`c
 int count = 5;
-```
+\`\`\`
 
-There is an important limitation in our current minimal startup:
-
-`start.S` does **not** copy initialized data from ROM into RAM.
-
-Therefore, although this linker script can place a `.data` section into the image, we should avoid relying on initialized writable globals until we deliberately add C-runtime initialization.
-
-Lab00 does not use any.
+Our current startup does not copy initialized data from ROM to RAM, so we should not rely on normal writable \`.data\` semantics yet.
 
 ---
 
-### `.bss 0x010000 (NOLOAD) :`
+## \`*(.data*)\`
 
-Create the `.bss` output section beginning explicitly at:
+\`\`\`text
+.data*   [CONV]
+          [LATER]
+\`\`\`
 
-```text
-0x010000
-```
+Collect initialized-data input sections.
 
-This is the start of our RAM region.
+The linker can place them now, but the startup runtime behavior needed to make them useful is still missing.
 
-`.bss` is conventionally used for writable objects that begin as zero.
+---
 
-For example:
+## \`.bss 0x010000 (NOLOAD) :\`
 
-```c
+\`\`\`text
+.bss       [CONV]
+0x010000   [CONV memory-map choice]
+NOLOAD     [LD]
+            [LATER]
+\`\`\`
+
+Place \`.bss\` at the start of RAM.
+
+\`NOLOAD\` assigns addresses but does not put bytes into the ROM image.
+
+Typical BSS objects:
+
+\`\`\`c
 int counter;
 static char buffer[128];
-```
+\`\`\`
 
-The qualifier:
+A normal C startup clears BSS before calling \`main\`.
 
-```text
-NOLOAD
-```
+We do not do that yet.
 
-means the linker assigns addresses to these objects but does not place their bytes into the load image.
-
-That makes sense because RAM does not need to be stored in `rom.hex`.
-
-However, our current `start.S` also does **not** clear `.bss` to zero.
-
-Our simulation RAM model happens to initialize RAM to zero, so simple tests may appear to work, but software should not rely on that as a general C-runtime guarantee until we explicitly add BSS initialization.
+The testbench RAM happens to initialize to zero, but that is a simulation convenience, not yet a software guarantee.
 
 ---
 
-### `*(.bss*)`
+## \`*(.bss*)\`
 
-Collect all input sections whose names begin with:
+\`\`\`text
+.bss*   [CONV]
+         [LATER]
+\`\`\`
 
-```text
-.bss
-```
-
-This includes compiler-generated variants such as:
-
-```text
-.bss
-.bss.counter
-.bss.buffer
-```
+Collect BSS-family input sections.
 
 ---
 
-### `*(COMMON)`
+## \`*(COMMON)\`
 
-Collect old-style linker "common" symbols.
+\`\`\`text
+COMMON   [LD/toolchain convention]
+          [OPT]
+\`\`\`
 
-Historically, uninitialized global variables could be emitted as common symbols instead of regular `.bss` sections.
+Collect old-style common symbols.
 
-Modern GCC options often place them directly in `.bss`, but including `COMMON` is a conventional safety measure.
-
----
-
-### `/DISCARD/ :`
-
-Create the linker script's special discard output section.
-
-Anything placed inside it is omitted from the final linked image.
+Modern GCC often emits uninitialized variables directly into BSS, but handling COMMON is conventional and harmless.
 
 ---
 
-### `*(.comment*)`
+## \`/DISCARD/ :\`
 
-Discard compiler/toolchain comment metadata.
+\`\`\`text
+/DISCARD/   [LD]
+             [OPT]
+\`\`\`
 
-This does not contain executable program state.
+Anything assigned here is omitted from the final linked image.
 
 ---
 
-### `*(.note*)`
+## \`*(.comment*)\`
+
+\`\`\`text
+.comment*   [toolchain metadata]
+             [OPT]
+\`\`\`
+
+Discard compiler/tool metadata.
+
+---
+
+## \`*(.note*)\`
+
+\`\`\`text
+.note*   [ELF/toolchain metadata]
+          [OPT]
+\`\`\`
 
 Discard ELF note sections.
 
-These can contain build metadata or ABI information that our bare-metal ROM does not need.
+---
+
+## \`*(.eh_frame*)\`
+
+\`\`\`text
+.eh_frame*   [toolchain/runtime metadata]
+              [OPT for our labs]
+\`\`\`
+
+Discard stack-unwinding metadata.
+
+Our current bare-metal labs do not use runtime unwinding.
 
 ---
 
-### `*(.eh_frame*)`
+# Current Memory Layout
 
-Discard exception-unwinding metadata normally produced for languages/toolchains that support stack unwinding.
-
-Our minimal bare-metal labs do not use this runtime mechanism, so keeping it would only enlarge the image.
-
----
-
-## Resulting Lab00 Layout
-
-Conceptually, the linker creates:
-
-```text
+\`\`\`text
 0x000000  +---------------------------+
-          | reset vector: initial SP  |
-0x000004  | reset vector: initial PC  |
+          | initial SP vector         | [68K] [NOW]
+0x000004  | initial PC vector         | [68K] [NOW]
 0x000008  |                           |
-          | unused                    |
+          | unused                    | [CONV]
 0x000100  +---------------------------+
-          | _start                    |
+          | _start                    | [CONV] [NOW]
           | program .text             |
           | .rodata                   |
-          | .data image if any        |
-          | ...                       |
+          |                           |
 0x00FFFF  +---------------------------+
 
 0x010000  +---------------------------+
-          | .bss / RAM                |
-          | stack grows downward      |
+          | RAM                       | [CONV] [NOW]
+          | future .bss/.data use     | [LATER]
           |                           |
+          | stack grows downward      | [68K behavior]
 0x01FFFF  +---------------------------+
-0x020000    initial SP
-```
+0x020000    initial SP                 [CONV] [NOW]
 
-The monitor at:
+0xF00000    monitor register           [CONV] [NOW]
+\`\`\`
 
-```text
-0xF00000
-```
+The monitor has no linker section because no program bytes live there. Software accesses it explicitly as a memory-mapped device.
 
-is not represented in the linker script because it does not store program sections.
+---
 
-It is simply a memory-mapped address that software accesses explicitly.
+# Required Now vs Later
 
-## Assembler vs Linker
+## Required now
 
-A useful distinction is:
+\`\`\`text
+[68K]
+- initial SP fetch from 0x000000
+- initial PC fetch from 0x000004
+- valid instructions
+- working stack for JSR/RTS
 
-```text
-start.S
-    decides what belongs to sections
+[ASM/LD]
+- emit the two reset-vector longwords
+- place them at address zero
+- place executable code at a valid address
+- resolve _start and main
 
-link.ld
-    decides where those sections live
-```
+[CONV]
+- _start naming
+- main naming
+- code at 0x000100
+- RAM at 0x010000
+- monitor at 0xF00000
+\`\`\`
 
-For example:
+## Later
 
-```asm
-.section .vectors,"a"
-```
+\`\`\`text
+- BSS clearing
+- ROM-to-RAM DATA copying
+- exception vectors beyond reset
+- interrupt initialization
+- user mode
+- separate user/supervisor stack handling
+- libc/Newlib startup
+- constructors/destructors
+\`\`\`
 
-says:
+Do not add these until a lab actually needs them.
 
-> these bytes belong to the input section `.vectors`
+---
 
-while:
+# Reusable Reading Template
 
-```ld
-. = 0x000000;
+Use these same questions for every unfamiliar construct in later labs.
 
-.vectors :
-{
-    KEEP(*(.vectors))
-}
-```
+## 1. What is it?
 
-says:
+\`\`\`text
+CPU instruction?
+assembler directive?
+linker command?
+label/symbol?
+project convention?
+\`\`\`
 
-> place those `.vectors` bytes at address `0x000000`
-```
+## 2. Who defines it?
 
-That separation between **section creation** and **section placement** is the main idea behind this linker script.
+\`\`\`text
+[68K]
+[ASM]
+[LD]
+[CONV]
+\`\`\`
+
+## 3. Is it required?
+
+\`\`\`text
+required by hardware?
+required by our current software design?
+optional convenience?
+\`\`\`
+
+## 4. When do we need it?
+
+\`\`\`text
+[NOW]
+[LATER]
+[OPT]
+\`\`\`
+
+## 5. What happens if we remove or rename it?
+
+This is often the fastest way to distinguish an architectural requirement from a convention.
+
+---
+
+# Core Principle
+
+When reading startup code, do not treat every line as equally fundamental.
+
+Always separate:
+
+\`\`\`text
+what the CPU requires
+from
+what the toolchain requires
+from
+what programmers commonly do
+from
+what we chose for this lab
+\`\`\`
+
+This classification is intended to become the documentation pattern for later labs as well.
