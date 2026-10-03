@@ -2,8 +2,6 @@
 
 module cisc68k_tb;
 
-    parameter string LAB_NAME = "lab00";
-
     localparam logic [23:0] ROM_BASE = 24'h000000;
     localparam logic [23:0] ROM_END  = 24'h00ffff;
     localparam logic [23:0] RAM_BASE = 24'h010000;
@@ -140,7 +138,6 @@ module cisc68k_tb;
     initial begin
         wait (mon_done);
         repeat (8) @(posedge clk);
-        $display("RESULT: %s PASS", LAB_NAME);
         $finish;
     end
 
