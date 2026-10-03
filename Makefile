@@ -13,14 +13,32 @@ BIN       := $(BUILD_DIR)/$(LAB).bin
 HEX       := $(LAB_DIR)/$(LAB).hex
 MAP       := $(BUILD_DIR)/$(LAB).map
 
-CFLAGS := -m68000 -Os -ffreestanding -fno-builtin -fno-pic -fno-pie           -ffunction-sections -fdata-sections
-LDFLAGS := -nostdlib -Wl,-T,labs/common/link.ld -Wl,--build-id=none            -Wl,--gc-sections -Wl,-Map,$(MAP)
+CFLAGS := -m68000 -Os -ffreestanding -fno-builtin -fno-pic -fno-pie \
+          -ffunction-sections -fdata-sections
 
-FX68K := 	fx68k/fx68k.sv 	fx68k/fx68kAlu.sv 	fx68k/uaddrPla.sv
+LDFLAGS := -nostdlib -Wl,-T,labs/common/link.ld -Wl,--build-id=none \
+           -Wl,--gc-sections -Wl,-Map,$(MAP)
 
-TB := 	tbench/cisc68k_tb.sv 	tbench/rom.sv 	tbench/ram.sv 	tbench/monitor.sv
+FX68K := \
+	fx68k/fx68k.sv \
+	fx68k/fx68kAlu.sv \
+	fx68k/uaddrPla.sv
 
-VFLAGS := 	--binary 	--timing 	--trace-vcd 	--no-assert-case 	-Wno-fatal 	-Wno-BLKANDNBLK 	-Wno-UNOPTFLAT 	--top-module cisc68k_tb
+TB := \
+	tbench/cisc68k_tb.sv \
+	tbench/rom.sv \
+	tbench/ram.sv \
+	tbench/monitor.sv
+
+VFLAGS := \
+	--binary \
+	--timing \
+	--trace-vcd \
+	--no-assert-case \
+	-Wno-fatal \
+	-Wno-BLKANDNBLK \
+	-Wno-UNOPTFLAT \
+	--top-module cisc68k_tb
 
 .PHONY: all rom sim run clean
 
