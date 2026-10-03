@@ -18,10 +18,10 @@ MOVEA.L  load an address register
 Expected output:
 
 ```text
-OK LAB01 PASS
+01
 ```
 
-The lab prints its own PASS banner; the important new evidence is in RAM and the VCD.
+The lab prints only `01` as a minimal completion marker; the important evidence is in RAM and the VCD.
 
 ## Program
 
