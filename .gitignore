@@ -5,3 +5,4 @@ obj_dir/
 microrom.mem
 nanorom.mem
 labs/*/*.hex
+references
