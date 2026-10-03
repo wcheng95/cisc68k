@@ -91,7 +91,7 @@ module cisc68k_tb;
 
     rom #(
         .BASE_ADDR (ROM_BASE),
-        .SIZE_BYTES(65536)
+        .SIZE_BYTES(65536),
         .HEX_FILE  ("labs/rom.hex")
     ) rom0 (
         .addr (eab),
