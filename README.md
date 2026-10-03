@@ -29,6 +29,7 @@ The goal is architectural understanding: programming model, instruction encoding
 - [Surfer cheat sheet](docs/surfer-cheatsheet.md)
 - [68000 I/O signals cheat sheet](docs/68000-io-signals-cheatsheet.md)
 - [68000 assembly tutorial](docs/asm-tutorial.md)
+- [References](docs/references.md)
 
 ## Credits
 
