@@ -15,7 +15,7 @@ reset
 Expected output:
 
 ```text
-OK LAB00 PASS
+Hi
 ```
 
 Lab00 is intentionally simple. Its purpose is to make the complete startup and execution path understandable before adding more 68000 features.
