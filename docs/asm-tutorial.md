@@ -1,46 +1,29 @@
-# 68000 Assembly Tutorial
+# 68000 Assembly Review
 
-This is a small cumulative tutorial for the 68000 assembly concepts learned in the cisc68k labs.
+A cumulative review sheet for concepts already learned in the labs.
 
-It is **not** intended to replace the Motorola 68000 User's Manual. Each lab README explains the code used in that lab; this document collects the reusable assembly ideas that carry forward.
+Keep explanations and experiments in each lab README. Add only reusable facts here.
 
-## Documentation Pattern
-
-```text
-labs/common/README.md
-    startup/linker details shared by all labs
-
-labs/labNN/README.md
-    explain that lab's code, experiment, and observations
-
-docs/asm-tutorial.md
-    cumulative 68000 assembly concepts learned across labs
-```
-
-Tags used where useful:
+## Tags
 
 ```text
 [68K]   Motorola 68000 architecture
 [ASM]   GNU assembler syntax/directive
-[LD]    GNU linker-script syntax/command
-[CONV]  convention or project choice
+[LD]    GNU linker-script syntax
+[CONV]  convention/project choice
 ```
 
----
+# Assembly Basics
 
-# From Common Startup
-
-## Labels and Symbols
-
-A label defines a symbolic address:
+## Labels
 
 ```asm
 _start:
 ```
 
-`_start` is a name chosen by us; the assembler/linker resolve it to a numeric address.
+A label gives the current address a symbolic name. [ASM]
 
-Local numeric labels are convenient for short branches:
+Local numeric labels:
 
 ```asm
 1:
@@ -48,47 +31,34 @@ Local numeric labels are convenient for short branches:
 ```
 
 ```text
-1b   nearest label 1 backward
-1f   nearest label 1 forward
+1b   nearest 1: backward
+1f   nearest 1: forward
 ```
 
-The numeric-label syntax is an assembler feature, not part of the 68000 ISA.
-
 ## Sections
-
-GNU assembler directives such as:
 
 ```asm
 .section .vectors,"a"
 .section .text.start,"ax"
 ```
 
-classify emitted bytes into named sections.
-
-The assembler creates sections; the linker decides where they live.
-
-Common flags:
-
 ```text
 a   allocatable
 x   executable
 ```
 
-## Emitting Data
+Assembler creates sections; linker places them.
+
+## Emit a Longword
 
 ```asm
 .long 0x00020000
 .long _start
 ```
 
-`.long` emits a 32-bit value.
+`.long` emits 32 bits. [ASM]
 
-The value may be:
-
-- a literal constant
-- a symbol whose address the linker resolves
-
-This is how the reset vector table is created.
+A symbol operand is resolved by the linker.
 
 ## Symbol Visibility
 
@@ -97,125 +67,123 @@ This is how the reset vector table is created.
 .extern main
 ```
 
-`.global` exports a symbol from the current assembly file.
+```text
+.global   export symbol
+.extern   symbol defined elsewhere
+```
 
-`.extern` declares that a symbol is defined elsewhere.
+# Control Flow
 
-These are assembler/linker mechanisms, not CPU instructions.
-
-## JSR — Jump to Subroutine
+## JSR
 
 ```asm
 jsr main
 ```
 
-`JSR` transfers control to a subroutine and saves the return address on the stack.
+Jump to subroutine and push return PC. [68K]
 
-Conceptually:
-
-```text
-push return PC
-PC <- destination
-```
-
-Lab00 showed the return address being written near the top of RAM.
-
-## RTS — Return from Subroutine
-
-The compiler-generated `main()` returns with:
+## RTS
 
 ```asm
 rts
 ```
 
-Conceptually:
+Pop return PC and continue there. [68K]
 
-```text
-PC <- longword popped from stack
-```
-
-So `JSR` and `RTS` form a call/return pair.
-
-## BRA — Unconditional Branch
+## BRA
 
 ```asm
-bra.s 1b
+bra.s target
 ```
 
-`BRA` is an unconditional branch.
+Unconditional branch. [68K]
 
-The `.s` selects the short-displacement encoding in GNU 68k assembly syntax.
+`.s` selects the short branch encoding.
 
-In startup code we use it to park the CPU if `main()` returns.
+# Stack
 
----
+`A7` is the stack pointer. [68K]
 
-# Stack Basics Learned So Far
+Stack grows downward:
 
-The 68000 uses `A7` as the stack pointer.
+```text
+push -> A7 decreases
+pop  -> A7 increases
+```
 
-The stack grows toward lower addresses.
-
-Typical push forms use pre-decrement addressing:
+Typical forms:
 
 ```asm
-move.w d0,-(a7)
-move.l d1,-(a7)
+move.w d0,-(a7)    // push word
+move.l d1,-(a7)    // push long
+
+move.w (a7)+,d0    // pop word
+move.l (a7)+,d1    // pop long
 ```
-
-Typical pop forms use post-increment addressing:
-
-```asm
-move.w (a7)+,d0
-move.l (a7)+,d1
-```
-
-Word push:
 
 ```text
-A7 = A7 - 2
+word push   A7 -= 2
+long push   A7 -= 4
 ```
 
-Longword push:
+Word/longword addresses must be even. A longword does not require 4-byte alignment on the original 68000.
+
+A byte operation using A7 changes A7 by 2, preserving even stack alignment.
+
+# Reset Facts
+
+On reset: [68K]
 
 ```text
-A7 = A7 - 4
+0x000000 -> initial supervisor SP
+0x000004 -> initial PC
 ```
 
-The original 68000 requires word and longword accesses to begin on an even address; 4-byte alignment is not required.
+The names `_start`, `.vectors`, and `main` are conventions, not CPU requirements.
 
-A byte operation using `A7` still adjusts the stack pointer by 2 so stack alignment remains even.
+# Linker Facts
 
----
+```ld
+. = 0x000000;
+```
 
-# Lab00 Notes
+`.` is the linker location counter. [LD]
 
-Lab00 is intentionally tiny.
+```ld
+KEEP(*(.vectors))
+```
 
-Its purpose is to prove:
+Keep matching input sections even with section garbage collection. [LD]
+
+```ld
+ALIGN(2)
+```
+
+Move the location counter to the next 2-byte boundary. [LD]
+
+```ld
+ENTRY(_start)
+```
+
+Sets the ELF entry point; it does not control the 68000 reset PC. [LD]
+
+# File Conventions
 
 ```text
-reset vectors
-    ->
-_start
-    ->
-main()
-    ->
-memory-mapped monitor write
+.S    assembly passed through C preprocessor
+.s    plain assembly
+.ld   conventional linker-script suffix
 ```
 
-The generated code writes:
+For our current startup, `.S` preprocessing is not yet required.
 
-```text
-H
-i
-newline
-```
+# Review Questions
 
-to the monitor at:
-
-```text
-0xF00000
-```
-
-As later labs introduce new instructions and addressing modes, add only the reusable concepts here. Keep experiment-specific details in the lab README.
+- What does the 68000 fetch from addresses 0 and 4?
+- Which names are CPU-defined and which are conventions?
+- What is the difference between a section and its placement?
+- What does `JSR` put on the stack?
+- Why can initial SP be one address beyond RAM?
+- Why does the 68000 only require even alignment for longwords?
+- What is the difference between `.S` and `.s`?
+- Why is `ENTRY(_start)` not what starts the CPU?
