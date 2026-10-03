@@ -40,8 +40,7 @@ VFLAGS := \
 	-Wno-fatal \
 	-Wno-BLKANDNBLK \
 	-Wno-UNOPTFLAT \
-	--top-module cisc68k_tb \
-	-GLAB_NAME=\"$(LAB)\"
+	--top-module cisc68k_tb
 
 .PHONY: all rom select-rom sim run clean
 
