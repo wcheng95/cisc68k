@@ -20,7 +20,7 @@ module monitor (
             if (ASn)
                 handled <= 1'b0;
 
-            if (sel && !ASn && !RWn && !handled) begin
+            if (sel && !ASn && !RWn && (!UDSn || !LDSn) && !handled) begin
                 handled <= 1'b1;
 
                 if (!UDSn) begin
