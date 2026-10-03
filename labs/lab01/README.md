@@ -18,11 +18,10 @@ MOVEA.L  load an address register
 Expected output:
 
 ```text
-OK
-RESULT: lab00 PASS
+OK LAB01 PASS
 ```
 
-The testbench still uses the Lab00 completion message; the important new evidence is in RAM and the VCD.
+The lab prints its own PASS banner; the important new evidence is in RAM and the VCD.
 
 ## Program
 
