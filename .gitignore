@@ -4,3 +4,4 @@ obj_dir/
 *.vcd
 microrom.mem
 nanorom.mem
+labs/*/*.hex
