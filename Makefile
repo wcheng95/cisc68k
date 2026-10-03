@@ -3,6 +3,7 @@ LAB ?= lab00
 CROSS     ?= m68k-mackerel-elf-
 CC        := $(CROSS)gcc
 OBJCOPY   := $(CROSS)objcopy
+OBJDUMP   := $(CROSS)objdump
 VERILATOR ?= verilator
 PYTHON    ?= python3
 
@@ -42,7 +43,7 @@ VFLAGS := \
 	-Wno-UNOPTFLAT \
 	--top-module cisc68k_tb
 
-.PHONY: all rom select-rom sim run clean
+.PHONY: all rom select-rom sim run disasm clean
 
 all: run
 
@@ -73,6 +74,9 @@ run: sim
 	@mv -f cisc68k.vcd logs/$(LAB)/$(LAB).vcd
 	@rm -f microrom.mem nanorom.mem
 	@echo "VCD: logs/$(LAB)/$(LAB).vcd"
+
+disasm: $(ELF)
+	$(OBJDUMP) -d -r $(ELF)
 
 clean:
 	rm -rf build obj_dir cisc68k.vcd microrom.mem nanorom.mem $(ROM_LINK)
