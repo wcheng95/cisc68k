@@ -14,7 +14,7 @@ The goal is architectural understanding: programming model, instruction encoding
 6. Exceptions, vectors, supervisor/user mode
 7. Interrupts and interrupt acknowledge
 8. External bus — AS, UDS/LDS, R/W, DTACK, BERR, FC
-9. Memory-mapped I/O and UART output
+9. Memory-mapped I/O and simple survey peripherals
 10. C compiler/ABI examples
 11. Concrete CISC vs RISC comparison with LX7 and RISC-V
 
