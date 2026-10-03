@@ -6,3 +6,4 @@ microrom.mem
 nanorom.mem
 labs/*/*.hex
 references/
+labs/rom.hex
