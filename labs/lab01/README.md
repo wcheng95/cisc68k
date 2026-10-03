@@ -100,6 +100,20 @@ Look for the RAM writes at:
 
 The longword stores should require two 16-bit bus transfers because the MC68000 external data bus is 16 bits.
 
+## Bus Handshake
+
+A 68000 bus transfer is a handshake, not a one-clock transaction:
+
+```text
+ASn asserted
+    -> address/control valid
+    -> device may take time
+    -> DTACKn asserted
+    -> CPU completes the transfer
+```
+
+A transfer may span multiple internal timing phases or RTL master-clock edges. The peripheral responds to the external bus signals; it does not know about fx68k's internal `enPhi1/enPhi2`.
+
 ## Questions
 
 - Why does `MOVE.B D0,...` store `0x78`?
