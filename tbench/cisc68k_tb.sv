@@ -13,8 +13,8 @@ module cisc68k_tb;
     logic extReset = 1'b1;
     logic pwrUp = 1'b1;
 
-    wire enPhi1 = ~phase;
-    wire enPhi2 =  phase;
+    wire enPhi1 =  phase;
+    wire enPhi2 = ~phase;
 
     wire        eRWn;
     wire        ASn;
@@ -129,7 +129,7 @@ module cisc68k_tb;
         $dumpfile("cisc68k.vcd");
         $dumpvars(0, cisc68k_tb);
 
-        repeat (8) @(posedge clk);
+        repeat (32) @(posedge clk);
         pwrUp    <= 1'b0;
         extReset <= 1'b0;
     end
