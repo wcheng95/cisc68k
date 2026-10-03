@@ -1,6 +1,4 @@
-#include <stdint.h>
-
-#define MONITOR (*(volatile uint8_t *)0x00f00000UL)
+#define MONITOR (*(volatile unsigned char *)0x00f00000UL)
 
 int main(void)
 {
