@@ -61,9 +61,12 @@ sim: $(HEX)
 
 run: sim
 	@mkdir -p logs/$(LAB)
-	./obj_dir/Vcisc68k_tb | tee logs/$(LAB)/$(LAB).log
+	@cp fx68k/microrom.mem microrom.mem
+	@cp fx68k/nanorom.mem nanorom.mem
+	@set -o pipefail; ./obj_dir/Vcisc68k_tb | tee logs/$(LAB)/$(LAB).log
 	@mv -f cisc68k.vcd logs/$(LAB)/$(LAB).vcd
+	@rm -f microrom.mem nanorom.mem
 	@echo "VCD: logs/$(LAB)/$(LAB).vcd"
 
 clean:
-	rm -rf build obj_dir cisc68k.vcd
+	rm -rf build obj_dir cisc68k.vcd microrom.mem nanorom.mem
