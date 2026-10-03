@@ -14,9 +14,20 @@ main:
     movea.l #0x010010,%a0
     move.l  #0x89abcdef,(%a0)
 
-    /* Same write-only monitor used by Lab00. */
+    /* Lab-owned PASS banner through the write-only monitor. */
     move.b  #'O',0x00f00000
     move.b  #'K',0x00f00000
+    move.b  #' ',0x00f00000
+    move.b  #'L',0x00f00000
+    move.b  #'A',0x00f00000
+    move.b  #'B',0x00f00000
+    move.b  #'0',0x00f00000
+    move.b  #'1',0x00f00000
+    move.b  #' ',0x00f00000
+    move.b  #'P',0x00f00000
+    move.b  #'A',0x00f00000
+    move.b  #'S',0x00f00000
+    move.b  #'S',0x00f00000
     move.b  #10,0x00f00000
 
     moveq   #0,%d0
