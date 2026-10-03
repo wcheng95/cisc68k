@@ -125,6 +125,30 @@ module cisc68k_tb;
         .done (mon_done)
     );
 
+
+    integer bus_count = 0;
+    logic asn_prev = 1'b1;
+
+    always @(posedge clk) begin
+        asn_prev <= ASn;
+
+        if (!extReset && asn_prev && !ASn && bus_count < 32) begin
+            $display(
+                "BUS %0d A=%06h %s UDS=%b LDS=%b FC=%b%b%b DTACK=%b DIN=%04h DOUT=%04h",
+                bus_count,
+                byte_addr,
+                eRWn ? "R" : "W",
+                UDSn,
+                LDSn,
+                FC2, FC1, FC0,
+                DTACKn,
+                iEdb,
+                oEdb
+            );
+            bus_count <= bus_count + 1;
+        end
+    end
+
     initial begin
         $dumpfile("cisc68k.vcd");
         $dumpvars(0, cisc68k_tb);
