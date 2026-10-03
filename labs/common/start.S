@@ -8,8 +8,8 @@
 // address above RAM and grows downward.
 
 .section .vectors,"a"          // [ASM][CONV] reset-vector section
-    .long   0x00020000        // [68K][NOW] initial supervisor SP
-    .long   _start            // [68K][NOW] initial PC
+    .long   0x00020000        // [68K] initial supervisor SP
+    .long   _start            // [68K] initial PC
 
 // [CONV] Keep startup code in its own executable section so
 // the linker can place it before normal program text.
