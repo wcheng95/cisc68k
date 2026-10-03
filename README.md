@@ -28,6 +28,7 @@ The goal is architectural understanding: programming model, instruction encoding
 - [Verilator cheat sheet](docs/verilator-cheatsheet.md)
 - [Surfer cheat sheet](docs/surfer-cheatsheet.md)
 - [68000 I/O signals cheat sheet](docs/68000-io-signals-cheatsheet.md)
+- [68000 assembly tutorial](docs/asm-tutorial.md)
 
 ## Credits
 
