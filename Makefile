@@ -8,6 +8,7 @@ PYTHON    ?= python3
 
 BUILD_DIR := build/$(LAB)
 LAB_DIR   := labs/$(LAB)
+LAB_SRC   := $(firstword $(wildcard $(LAB_DIR)/$(LAB).S $(LAB_DIR)/$(LAB).c))
 ELF       := $(BUILD_DIR)/$(LAB).elf
 BIN       := $(BUILD_DIR)/$(LAB).bin
 HEX       := $(LAB_DIR)/$(LAB).hex
@@ -46,9 +47,9 @@ all: run
 
 rom: $(HEX)
 
-$(ELF): labs/common/start.S labs/common/link.ld $(LAB_DIR)/$(LAB).c
+$(ELF): labs/common/start.S labs/common/link.ld $(LAB_SRC)
 	@mkdir -p $(BUILD_DIR)
-	$(CC) $(CFLAGS) $(LDFLAGS) labs/common/start.S $(LAB_DIR)/$(LAB).c -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) labs/common/start.S $(LAB_SRC) -o $@
 
 $(BIN): $(ELF)
 	$(OBJCOPY) -O binary $< $@
