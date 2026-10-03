@@ -13,6 +13,7 @@ ELF       := $(BUILD_DIR)/$(LAB).elf
 BIN       := $(BUILD_DIR)/$(LAB).bin
 HEX       := $(LAB_DIR)/$(LAB).hex
 MAP       := $(BUILD_DIR)/$(LAB).map
+ROM_LINK  := labs/rom.hex
 
 CFLAGS := -m68000 -Os -ffreestanding -fno-builtin -fno-pic -fno-pie \
           -ffunction-sections -fdata-sections
@@ -41,11 +42,15 @@ VFLAGS := \
 	-Wno-UNOPTFLAT \
 	--top-module cisc68k_tb
 
-.PHONY: all rom sim run clean
+.PHONY: all rom select-rom sim run clean
 
 all: run
 
 rom: $(HEX)
+
+select-rom: $(HEX)
+	@ln -sfn "$(LAB)/$(LAB).hex" $(ROM_LINK)
+	@echo "ROM: $(ROM_LINK) -> $(LAB)/$(LAB).hex"
 
 $(ELF): labs/common/start.S labs/common/link.ld $(LAB_SRC)
 	@mkdir -p $(BUILD_DIR)
@@ -57,7 +62,7 @@ $(BIN): $(ELF)
 $(HEX): $(BIN) tools/helper.py
 	$(PYTHON) tools/helper.py $< $@
 
-sim: $(HEX)
+sim: select-rom
 	$(VERILATOR) $(VFLAGS) $(TB) $(FX68K)
 
 run: sim
@@ -70,4 +75,4 @@ run: sim
 	@echo "VCD: logs/$(LAB)/$(LAB).vcd"
 
 clean:
-	rm -rf build obj_dir cisc68k.vcd microrom.mem nanorom.mem
+	rm -rf build obj_dir cisc68k.vcd microrom.mem nanorom.mem $(ROM_LINK)
