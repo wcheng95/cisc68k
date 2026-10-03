@@ -12,12 +12,7 @@ module monitor (
 
     logic handled;
 
-    initial begin
-        handled = 1'b0;
-        done    = 1'b0;
-    end
-
-    always_ff @(posedge clk) begin
+    always @(posedge clk) begin
         if (reset) begin
             handled <= 1'b0;
             done    <= 1'b0;
