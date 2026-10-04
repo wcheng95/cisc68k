@@ -63,8 +63,12 @@ $(BIN): $(ELF)
 $(HEX): $(BIN) tools/helper.py
 	$(PYTHON) tools/helper.py $< $@
 
-sim: select-rom
+SIM_BIN := obj_dir/Vcisc68k_tb
+
+$(SIM_BIN): $(TB) $(FX68K)
 	$(VERILATOR) $(VFLAGS) $(TB) $(FX68K)
+
+sim: select-rom $(SIM_BIN)
 
 run: sim
 	@mkdir -p logs/$(LAB)
@@ -79,4 +83,4 @@ disasm: $(ELF)
 	$(OBJDUMP) -d -r $(ELF)
 
 clean:
-	rm -rf build obj_dir cisc68k.vcd microrom.mem nanorom.mem $(ROM_LINK)
+	rm -rf build cisc68k.vcd microrom.mem nanorom.mem $(ROM_LINK)
