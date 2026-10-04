@@ -165,6 +165,14 @@ Expected value:
 D7 low word = 0x4444
 ```
 
+On the original 68000, this PC-relative mode uses a signed 16-bit displacement:
+
+```text
+EA = PC + sign_extend(displacement16)
+```
+
+so the reachable range is roughly ±32 KiB from the PC base used by the instruction.
+
 ## Result Area
 
 Each observed value is copied to fixed RAM addresses:
