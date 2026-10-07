@@ -72,6 +72,38 @@ A symbol operand is resolved by the linker.
 .extern   symbol defined elsewhere
 ```
 
+## Data-register operand sizes
+
+For an ordinary data-register operand, size always selects the low part of `Dn`: [68K]
+
+```text
+.B   Dn[7:0]
+.W   Dn[15:0]
+.L   Dn[31:0]
+```
+
+Example:
+
+```text
+D7 = 0x12345678
+
+MOVE.B D7,...  -> 0x78
+MOVE.W D7,...  -> 0x5678
+MOVE.L D7,...  -> 0x12345678
+```
+
+`MOVE.W` to a data register changes only the low 16 bits; it does not sign-extend.
+
+There is no direct word-sized view of `Dn[31:16]`. Move/copy and rearrange first, for example:
+
+```asm
+move.l  %d7,%d0
+swap    %d0
+move.w  %d0,...
+```
+
+After `SWAP`, the original upper word is in `D0[15:0]`.
+
 # Control Flow
 
 ## JSR
@@ -185,5 +217,7 @@ For our current startup, `.S` preprocessing is not yet required.
 - What does `JSR` put on the stack?
 - Why can initial SP be one address beyond RAM?
 - Why does the 68000 only require even alignment for longwords?
+- Which bits of a data register do `.B`, `.W`, and `.L` select?
+- How do you reach the original upper word of a data register?
 - What is the difference between `.S` and `.s`?
 - Why is `ENTRY(_start)` not what starts the CPU?
