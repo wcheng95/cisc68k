@@ -55,7 +55,7 @@ The handler records the exception frame and then executes:
 rte
 ```
 
-For this trap, the saved PC points to the instruction after `TRAP`, so execution resumes normally.
+On the original 68000, the saved PC in this normal exception frame points to the next instruction, so execution resumes normally.
 
 Success marker:
 
@@ -65,12 +65,14 @@ Success marker:
 
 ## Normal 68000 Exception Frame
 
-For the normal frame used by these exceptions, the supervisor stack points at:
+For the normal group 1/2 frame used by these exceptions, the supervisor stack points at:
 
 ```text
 SP+0   saved SR    word
 SP+2   saved PC    long
 ```
+
+Only SR and PC are present in this original-68000 short frame.
 
 Lab06 saves the TRAP frame at:
 
@@ -100,16 +102,9 @@ The handler records its frame at:
 0x0100CC   saved PC
 ```
 
-The saved PC identifies the illegal opcode, so returning without changing it would take the same exception again.
+For the original 68000 group 1/2 exception frame, the saved PC points to the next instruction to execute. Therefore this lab's illegal-instruction handler can simply use `RTE`; it does not need to modify the stacked PC.
 
-The handler therefore does:
-
-```asm
-addq.l #2,2(%sp)
-rte
-```
-
-The `ILLEGAL` opcode is one 16-bit word, so adding 2 to the stacked PC skips it.
+This is worth treating as a processor-generation detail rather than assuming every later 68k uses exactly the same exception-frame semantics.
 
 Success marker:
 
@@ -190,4 +185,4 @@ Watch the CPU:
 - Why does `TRAP #0` use vector 32?
 - What gets pushed automatically when the exception is taken?
 - How is `RTE` different from `RTS`?
-- Why must the illegal-instruction handler change the stacked PC before `RTE`?
+- Where does the original 68000 normal exception frame point when it saves PC?
