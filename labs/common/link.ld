@@ -8,7 +8,8 @@ SECTIONS
 
     .vectors :
     {
-        KEEP(*(.vectors))     /* keep reset vectors even with --gc-sections */
+        KEEP(*(.vectors))     /* reset vectors */
+        KEEP(*(.vectors.*))   /* lab-specific exception/interrupt vectors */
     }
 
     /* [CONV] place startup/program code at an easy-to-see address */
