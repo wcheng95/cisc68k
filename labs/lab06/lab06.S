@@ -21,16 +21,16 @@
 main:
     /*
      * TRAP #0 enters through vector 32.
-     * Its stacked PC already points to the instruction after TRAP,
-     * so RTE can return normally.
+     * On the original 68000, the stacked PC points to the next instruction,
+     * so RTE returns here normally.
      */
     trap    #0
     move.b  #0x11,0x0100c0
 
     /*
      * ILLEGAL enters through vector 4.
-     * The handler advances the stacked PC by one opcode word before RTE
-     * so execution resumes here instead of taking the same exception again.
+     * On the original 68000, this normal exception frame also carries
+     * the next instruction PC, so RTE resumes here without adjustment.
      */
     illegal
     move.b  #0x22,0x0100c1
@@ -53,7 +53,4 @@ illegal_handler:
     move.w  (%sp),0x0100ca
     move.l  2(%sp),0x0100cc
     move.b  #0xa4,0x0100c3
-
-    /* Skip the 2-byte ILLEGAL opcode before returning. */
-    addq.l  #2,2(%sp)
     rte
