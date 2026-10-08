@@ -7,30 +7,28 @@
  * section starts at vector 2 when link.ld appends .vectors.*.
  */
 .section .vectors.lab06,"a"
-    .long   0                       /* vector 2: bus error */
-    .long   0                       /* vector 3: address error */
-    .long   illegal_handler         /* vector 4: illegal instruction */
+    .long   0
+    .long   0
+    .long   illegal_handler
 
-    /* Skip vectors 5..31. */
     .space  27*4
 
-    .long   trap0_handler           /* vector 32: TRAP #0 */
+    .long   trap0_handler
 
 .section .text.lab06,"ax"
 
 main:
     /*
-     * TRAP #0 enters through vector 32.
-     * On the original 68000, the stacked PC points to the next instruction,
-     * so RTE returns here normally.
+     * TRAP #0 saves the PC of the following instruction, so RTE
+     * returns here normally.
      */
     trap    #0
     move.b  #0x11,0x0100c0
 
     /*
-     * ILLEGAL enters through vector 4.
-     * On the original 68000, this normal exception frame also carries
-     * the next instruction PC, so RTE resumes here without adjustment.
+     * ILLEGAL saves the address of the offending opcode itself on
+     * this original-68000 path. The handler advances the saved PC
+     * by one word before RTE.
      */
     illegal
     move.b  #0x22,0x0100c1
@@ -43,7 +41,6 @@ main:
     rts
 
 trap0_handler:
-    /* Original 68000 normal exception frame: SR at (SP), PC at 2(SP). */
     move.w  (%sp),0x0100c4
     move.l  2(%sp),0x0100c6
     move.b  #0xa0,0x0100c2
@@ -53,4 +50,6 @@ illegal_handler:
     move.w  (%sp),0x0100ca
     move.l  2(%sp),0x0100cc
     move.b  #0xa4,0x0100c3
+
+    addq.l  #2,2(%sp)
     rte
