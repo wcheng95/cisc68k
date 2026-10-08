@@ -173,6 +173,32 @@ On reset: [68K]
 
 The names `_start`, `.vectors`, and `main` are conventions, not CPU requirements.
 
+
+# Exceptions
+
+For the short exception frame used in Lab06: [68K]
+
+```text
+SP+0   saved SR    word
+SP+2   saved PC    long
+```
+
+`RTE` restores SR and PC from the exception frame.
+
+The meaning of the saved PC depends on the exception:
+
+```text
+TRAP #0   saved PC = next instruction
+ILLEGAL   saved PC = offending instruction
+```
+
+Therefore an `ILLEGAL` handler that wants to skip the bad 16-bit opcode must adjust the stacked PC before `RTE`:
+
+```asm
+addq.l  #2,2(%sp)
+rte
+```
+
 # Linker Facts
 
 ```ld
@@ -221,3 +247,5 @@ For our current startup, `.S` preprocessing is not yet required.
 - How do you reach the original upper word of a data register?
 - What is the difference between `.S` and `.s`?
 - Why is `ENTRY(_start)` not what starts the CPU?
+- What does `RTE` restore?
+- Why can different exception types require different treatment of the saved PC?
