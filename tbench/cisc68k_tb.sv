@@ -42,6 +42,12 @@ module cisc68k_tb;
     wire [15:0] ram_data;
     wire        mon_done;
 
+    string  trace_path;
+    string  vcd_path;
+    integer trace_fd = 0;
+    logic   trace_en = 1'b0;
+    logic   trace_active = 1'b0;
+
     wire DTACKn = (!ASn && (rom_sel || ram_sel || mon_sel)) ? 1'b0 : 1'b1;
 
     assign iEdb = rom_sel ? rom_data :
@@ -127,12 +133,42 @@ module cisc68k_tb;
 
 
     initial begin
-        $dumpfile("cisc68k.vcd");
-        $dumpvars(0, cisc68k_tb);
+        if ($value$plusargs("trace=%s", trace_path)) begin
+            trace_fd = $fopen(trace_path, "w");
+            if (trace_fd == 0)
+                $fatal(1, "failed to open trace file: %s", trace_path);
+            trace_en = 1'b1;
+        end
+
+        if ($value$plusargs("vcd=%s", vcd_path)) begin
+            $dumpfile(vcd_path);
+            $dumpvars(0, cisc68k_tb);
+        end
 
         repeat (32) @(posedge clk);
         pwrUp    <= 1'b0;
         extReset <= 1'b0;
+    end
+
+    /*
+     * Lightweight bus trace: one line per external 68000 bus cycle.
+     * ASn remains asserted for multiple simulator clocks, so trace_active
+     * suppresses duplicate lines for the same transaction.
+     */
+    always_ff @(posedge clk) begin
+        if (ASn)
+            trace_active <= 1'b0;
+        else if (trace_en && !trace_active) begin
+            trace_active <= 1'b1;
+            $fdisplay(trace_fd,
+                      "[%0t] %s addr=%06x data=%04x UDS=%0b LDS=%0b FC=%0b%0b%0b",
+                      $time,
+                      eRWn ? "RD" : "WR",
+                      byte_addr,
+                      eRWn ? iEdb : oEdb,
+                      UDSn, LDSn,
+                      FC2, FC1, FC0);
+        end
     end
 
     initial begin
@@ -144,6 +180,11 @@ module cisc68k_tb;
     initial begin
         repeat (200000) @(posedge clk);
         $fatal(1, "TIMEOUT: monitor did not receive newline");
+    end
+
+    final begin
+        if (trace_fd != 0)
+            $fclose(trace_fd);
     end
 
 endmodule
