@@ -141,6 +141,30 @@ module cisc68k_tb;
         $finish;
     end
 
+    /*
+     * Temporary Lab06 exception trace.
+     * Print each new bus cycle touching vectors, program ROM, or the top
+     * of supervisor RAM. Remove after the exception path is understood.
+     */
+    logic trace_active = 1'b0;
+
+    always_ff @(posedge clk) begin
+        if (ASn)
+            trace_active <= 1'b0;
+        else if (!trace_active &&
+                 ((byte_addr <= 24'h0001ff) ||
+                  ((byte_addr >= 24'h01ffe0) && (byte_addr <= 24'h01ffff)))) begin
+            trace_active <= 1'b1;
+            $display("[%0t] %s addr=%06x data=%04x UDS=%b LDS=%b FC=%b%b%b",
+                     $time,
+                     eRWn ? "RD" : "WR",
+                     byte_addr,
+                     eRWn ? iEdb : oEdb,
+                     UDSn, LDSn,
+                     FC2, FC1, FC0);
+        end
+    end
+
     initial begin
         repeat (200000) @(posedge clk);
         $fatal(1, "TIMEOUT: monitor did not receive newline");
