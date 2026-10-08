@@ -47,6 +47,7 @@ module cisc68k_tb;
     integer trace_fd = 0;
     logic   trace_en = 1'b0;
     logic   trace_active = 1'b0;
+    longint unsigned trace_cycle = 0;
 
     wire DTACKn = (!ASn && (rom_sel || ram_sel || mon_sel)) ? 1'b0 : 1'b1;
 
@@ -151,19 +152,20 @@ module cisc68k_tb;
     end
 
     /*
-     * Lightweight bus trace: one line per external 68000 bus cycle.
-     * ASn remains asserted for multiple simulator clocks, so trace_active
-     * suppresses duplicate lines for the same transaction.
+     * Lightweight bus trace: one compact line per external bus cycle.
+     * Format:
+     *   <cycle> <R|W> [<addr>] <data> <UDS><LDS> <FC>
      */
     always_ff @(posedge clk) begin
         if (ASn)
             trace_active <= 1'b0;
         else if (trace_en && !trace_active) begin
             trace_active <= 1'b1;
+            trace_cycle <= trace_cycle + 1;
             $fdisplay(trace_fd,
-                      "[%0t] %s addr=%06x data=%04x UDS=%0b LDS=%0b FC=%0b%0b%0b",
-                      $time,
-                      eRWn ? "RD" : "WR",
+                      "%0d %s [%06x] %04x %0b%0b %0b%0b%0b",
+                      trace_cycle,
+                      eRWn ? "R" : "W",
                       byte_addr,
                       eRWn ? iEdb : oEdb,
                       UDSn, LDSn,
