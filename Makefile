@@ -1,6 +1,19 @@
 LAB ?= lab00
 MODE ?= trace
 
+ifeq ($(filter $(MODE),trace vcd both none),)
+$(error MODE must be one of: trace vcd both none)
+endif
+
+RUN_ARGS :=
+ifeq ($(MODE),trace)
+RUN_ARGS := +trace=logs/$(LAB)/$(LAB).trace
+else ifeq ($(MODE),vcd)
+RUN_ARGS := +vcd=logs/$(LAB)/$(LAB).vcd
+else ifeq ($(MODE),both)
+RUN_ARGS := +trace=logs/$(LAB)/$(LAB).trace +vcd=logs/$(LAB)/$(LAB).vcd
+endif
+
 CROSS     ?= m68k-mackerel-elf-
 CC        := $(CROSS)gcc
 OBJCOPY   := $(CROSS)objcopy
@@ -74,19 +87,10 @@ sim: select-rom $(SIM_BIN)
 run: sim
 	@mkdir -p logs/$(LAB)
 	@rm -f logs/$(LAB)/$(LAB).trace logs/$(LAB)/$(LAB).vcd
-	@case "$(MODE)" in \
-		trace) RUN_ARGS="+trace=logs/$(LAB)/$(LAB).trace" ;; \
-		vcd)   RUN_ARGS="+vcd=logs/$(LAB)/$(LAB).vcd" ;; \
-		both)  RUN_ARGS="+trace=logs/$(LAB)/$(LAB).trace +vcd=logs/$(LAB)/$(LAB).vcd" ;; \
-		none)  RUN_ARGS="" ;; \
-		*) echo "ERROR: MODE must be trace, vcd, both, or none"; exit 2 ;; \
-	esac; \
-	cp fx68k/microrom.mem microrom.mem; \
-	cp fx68k/nanorom.mem nanorom.mem; \
-	set -o pipefail; ./obj_dir/Vcisc68k_tb $RUN_ARGS | tee logs/$(LAB)/$(LAB).log; \
-	status=$?; \
-	rm -f microrom.mem nanorom.mem; \
-	exit $status
+	@cp fx68k/microrom.mem microrom.mem
+	@cp fx68k/nanorom.mem nanorom.mem
+	@set -o pipefail; ./obj_dir/Vcisc68k_tb $(RUN_ARGS) | tee logs/$(LAB)/$(LAB).log
+	@rm -f microrom.mem nanorom.mem
 	@if [ "$(MODE)" = "trace" ] || [ "$(MODE)" = "both" ]; then echo "TRACE: logs/$(LAB)/$(LAB).trace"; fi
 	@if [ "$(MODE)" = "vcd" ] || [ "$(MODE)" = "both" ]; then echo "VCD: logs/$(LAB)/$(LAB).vcd"; fi
 
