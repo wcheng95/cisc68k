@@ -1,4 +1,5 @@
 LAB ?= lab00
+MODE ?= trace
 
 CROSS     ?= m68k-mackerel-elf-
 CC        := $(CROSS)gcc
@@ -72,12 +73,21 @@ sim: select-rom $(SIM_BIN)
 
 run: sim
 	@mkdir -p logs/$(LAB)
-	@cp fx68k/microrom.mem microrom.mem
-	@cp fx68k/nanorom.mem nanorom.mem
-	@set -o pipefail; ./obj_dir/Vcisc68k_tb | tee logs/$(LAB)/$(LAB).log
-	@mv -f cisc68k.vcd logs/$(LAB)/$(LAB).vcd
-	@rm -f microrom.mem nanorom.mem
-	@echo "VCD: logs/$(LAB)/$(LAB).vcd"
+	@case "$(MODE)" in \
+		trace) RUN_ARGS="+trace=logs/$(LAB)/$(LAB).trace" ;; \
+		vcd)   RUN_ARGS="+vcd=logs/$(LAB)/$(LAB).vcd" ;; \
+		both)  RUN_ARGS="+trace=logs/$(LAB)/$(LAB).trace +vcd=logs/$(LAB)/$(LAB).vcd" ;; \
+		none)  RUN_ARGS="" ;; \
+		*) echo "ERROR: MODE must be trace, vcd, both, or none"; exit 2 ;; \
+	esac; \
+	cp fx68k/microrom.mem microrom.mem; \
+	cp fx68k/nanorom.mem nanorom.mem; \
+	set -o pipefail; ./obj_dir/Vcisc68k_tb $RUN_ARGS | tee logs/$(LAB)/$(LAB).log; \
+	status=$?; \
+	rm -f microrom.mem nanorom.mem; \
+	exit $status
+	@if [ "$(MODE)" = "trace" ] || [ "$(MODE)" = "both" ]; then echo "TRACE: logs/$(LAB)/$(LAB).trace"; fi
+	@if [ "$(MODE)" = "vcd" ] || [ "$(MODE)" = "both" ]; then echo "VCD: logs/$(LAB)/$(LAB).vcd"; fi
 
 disasm: $(ELF)
 	$(OBJDUMP) -d -r $(ELF)
