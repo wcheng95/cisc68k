@@ -73,6 +73,7 @@ sim: select-rom $(SIM_BIN)
 
 run: sim
 	@mkdir -p logs/$(LAB)
+	@rm -f logs/$(LAB)/$(LAB).trace logs/$(LAB)/$(LAB).vcd
 	@case "$(MODE)" in \
 		trace) RUN_ARGS="+trace=logs/$(LAB)/$(LAB).trace" ;; \
 		vcd)   RUN_ARGS="+vcd=logs/$(LAB)/$(LAB).vcd" ;; \
