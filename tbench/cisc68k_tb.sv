@@ -157,11 +157,13 @@ module cisc68k_tb;
      *   <cycle> <R|W> [<addr>] <data> <UDS><LDS> <FC>
      */
     always_ff @(posedge clk) begin
-        if (ASn)
+        if (extReset || pwrUp) begin
             trace_active <= 1'b0;
-        else if (trace_en && !trace_active) begin
+            trace_cycle <= 0;
+        end else if (ASn) begin
+            trace_active <= 1'b0;
+        end else if (trace_en && !trace_active) begin
             trace_active <= 1'b1;
-            trace_cycle <= trace_cycle + 1;
             $fdisplay(trace_fd,
                       "%3d %s [%06x] %04x %0b%0b %0b%0b%0b",
                       trace_cycle,
@@ -170,6 +172,7 @@ module cisc68k_tb;
                       eRWn ? iEdb : oEdb,
                       UDSn, LDSn,
                       FC2, FC1, FC0);
+            trace_cycle <= trace_cycle + 1;
         end
     end
 
