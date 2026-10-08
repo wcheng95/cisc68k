@@ -163,7 +163,7 @@ module cisc68k_tb;
             trace_active <= 1'b1;
             trace_cycle <= trace_cycle + 1;
             $fdisplay(trace_fd,
-                      "%0d %s [%06x] %04x %0b%0b %0b%0b%0b",
+                      "%3d %s [%06x] %04x %0b%0b %0b%0b%0b",
                       trace_cycle,
                       eRWn ? "R" : "W",
                       byte_addr,
