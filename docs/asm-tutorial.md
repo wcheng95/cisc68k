@@ -199,6 +199,28 @@ addq.l  #2,2(%sp)
 rte
 ```
 
+
+# Supervisor and User Mode
+
+The SR supervisor bit is bit 13: [68K]
+
+```text
+S = 1   supervisor mode
+S = 0   user mode
+```
+
+On the original MC68000:
+
+```text
+user mode may read SR
+user mode may modify CCR
+user mode may not use privileged forms that modify the full SR
+```
+
+An exception enters supervisor mode and uses the supervisor stack. `RTE` restores the saved SR, so it can return to user mode.
+
+Supervisor/user mode is not memory protection by itself; without external protection/MMU hardware, user mode can still access ordinary memory and MMIO.
+
 # Linker Facts
 
 ```ld
@@ -249,3 +271,5 @@ For our current startup, `.S` preprocessing is not yet required.
 - Why is `ENTRY(_start)` not what starts the CPU?
 - What does `RTE` restore?
 - Why can different exception types require different treatment of the saved PC?
+- What does SR.S select?
+- Why can user mode still access RAM on our simple machine?
