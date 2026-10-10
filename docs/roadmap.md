@@ -1,5 +1,20 @@
 # Survey Roadmap
 
+## Status
+
+68000 survey Labs 01–11 are complete.
+
+Lab12 is intentionally deferred until after the RISC survey so the final CISC-vs-RISC comparison can be based on experiments from both sides rather than on slogans or prior assumptions.
+
+Resume point:
+
+```text
+cisc68k complete through Lab11
+next: RISC survey
+return later: Lab12 — CISC vs RISC
+```
+
+
 ## 01 — Programming Model
 
 Study D0-D7, A0-A7, stack pointer, PC, SR/CCR, supervisor state, and byte/word/long operands.
@@ -103,7 +118,7 @@ Any later peripheral should exist only to expose a specific 68000 mechanism. Its
 
 Compile tiny C functions and inspect argument passing, return values, register allocation, stack frames, addressing modes, and optimization effects.
 
-## 12 — CISC vs RISC
+## 12 — CISC vs RISC — Deferred
 
 Compare observed behavior, not slogans.
 
