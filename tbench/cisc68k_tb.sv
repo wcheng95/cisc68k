@@ -6,8 +6,9 @@ module cisc68k_tb;
     localparam logic [23:0] ROM_END  = 24'h00ffff;
     localparam logic [23:0] RAM_BASE = 24'h010000;
     localparam logic [23:0] RAM_END  = 24'h01ffff;
-    localparam logic [23:0] MON_ADDR = 24'hf00000;
-    localparam logic [23:0] IRQ_ADDR = 24'hf00010;
+    localparam logic [23:0] MON_ADDR  = 24'hf00000;
+    localparam logic [23:0] IRQ_ADDR  = 24'hf00010;
+    localparam logic [23:0] MMIO_ADDR = 24'hf00020;
 
     logic clk = 1'b0;
     logic phase = 1'b0;
@@ -37,11 +38,13 @@ module cisc68k_tb;
 
     wire rom_sel = (byte_addr >= ROM_BASE) && (byte_addr <= ROM_END);
     wire ram_sel = (byte_addr >= RAM_BASE) && (byte_addr <= RAM_END);
-    wire mon_sel = (byte_addr == MON_ADDR);
-    wire irq_sel = (byte_addr == IRQ_ADDR);
+    wire mon_sel  = (byte_addr == MON_ADDR);
+    wire irq_sel  = (byte_addr == IRQ_ADDR);
+    wire mmio_sel = (byte_addr == MMIO_ADDR);
 
     wire [15:0] rom_data;
     wire [15:0] ram_data;
+    wire [15:0] mmio_data;
     wire        mon_done;
     wire        irq_IPL0n;
     wire        irq_IPL1n;
@@ -55,11 +58,12 @@ module cisc68k_tb;
     logic   trace_active = 1'b0;
     longint unsigned trace_cycle = 0;
 
-    wire DTACKn = (!ASn && (rom_sel || ram_sel || mon_sel || irq_sel)) ? 1'b0 : 1'b1;
+    wire DTACKn = (!ASn && (rom_sel || ram_sel || mon_sel || irq_sel || mmio_sel)) ? 1'b0 : 1'b1;
 
-    assign iEdb = rom_sel ? rom_data :
-                  ram_sel ? ram_data :
-                            16'hffff;
+    assign iEdb = rom_sel  ? rom_data  :
+                  ram_sel  ? ram_data  :
+                  mmio_sel ? mmio_data :
+                             16'hffff;
 
     always #5 clk = ~clk;
 
@@ -136,6 +140,18 @@ module cisc68k_tb;
         .LDSn (LDSn),
         .wdata(oEdb),
         .done (mon_done)
+    );
+
+    mmio_reg mmio0 (
+        .clk  (clk),
+        .reset(extReset),
+        .sel  (mmio_sel),
+        .ASn  (ASn),
+        .RWn  (eRWn),
+        .UDSn (UDSn),
+        .LDSn (LDSn),
+        .wdata(oEdb),
+        .rdata(mmio_data)
     );
 
     irq_autovec #(
