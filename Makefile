@@ -1,5 +1,6 @@
 LAB ?= lab00
 MODE ?= trace
+OPT ?= s
 
 ifeq ($(filter $(MODE),trace vcd both none),)
 $(error MODE must be one of: trace vcd both none)
@@ -30,7 +31,9 @@ HEX       := $(LAB_DIR)/$(LAB).hex
 MAP       := $(BUILD_DIR)/$(LAB).map
 ROM_LINK  := labs/rom.hex
 
-CFLAGS := -m68000 -Os -ffreestanding -fno-builtin -fno-pic -fno-pie \
+OPTFLAG := -O$(OPT)
+
+CFLAGS := -m68000 $(OPTFLAG) -ffreestanding -fno-builtin -fno-pic -fno-pie \
           -ffunction-sections -fdata-sections
 
 LDFLAGS := -nostdlib -Wl,-T,labs/common/link.ld -Wl,--build-id=none \
