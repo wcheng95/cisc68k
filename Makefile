@@ -45,7 +45,8 @@ TB := \
 	tbench/cisc68k_tb.sv \
 	tbench/rom.sv \
 	tbench/ram.sv \
-	tbench/monitor.sv
+	tbench/monitor.sv \
+	tbench/irq_autovec.sv
 
 VFLAGS := \
 	--binary \
