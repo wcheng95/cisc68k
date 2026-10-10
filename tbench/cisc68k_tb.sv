@@ -7,6 +7,7 @@ module cisc68k_tb;
     localparam logic [23:0] RAM_BASE = 24'h010000;
     localparam logic [23:0] RAM_END  = 24'h01ffff;
     localparam logic [23:0] MON_ADDR = 24'hf00000;
+    localparam logic [23:0] IRQ_ADDR = 24'hf00010;
 
     logic clk = 1'b0;
     logic phase = 1'b0;
@@ -37,10 +38,15 @@ module cisc68k_tb;
     wire rom_sel = (byte_addr >= ROM_BASE) && (byte_addr <= ROM_END);
     wire ram_sel = (byte_addr >= RAM_BASE) && (byte_addr <= RAM_END);
     wire mon_sel = (byte_addr == MON_ADDR);
+    wire irq_sel = (byte_addr == IRQ_ADDR);
 
     wire [15:0] rom_data;
     wire [15:0] ram_data;
     wire        mon_done;
+    wire        irq_IPL0n;
+    wire        irq_IPL1n;
+    wire        irq_IPL2n;
+    wire        irq_VPAn;
 
     string  trace_path;
     string  vcd_path;
@@ -49,7 +55,7 @@ module cisc68k_tb;
     logic   trace_active = 1'b0;
     longint unsigned trace_cycle = 0;
 
-    wire DTACKn = (!ASn && (rom_sel || ram_sel || mon_sel)) ? 1'b0 : 1'b1;
+    wire DTACKn = (!ASn && (rom_sel || ram_sel || mon_sel || irq_sel)) ? 1'b0 : 1'b1;
 
     assign iEdb = rom_sel ? rom_data :
                   ram_sel ? ram_data :
@@ -83,13 +89,13 @@ module cisc68k_tb;
         .oHALTEDn (oHALTEDn),
 
         .DTACKn   (DTACKn),
-        .VPAn     (1'b1),
+        .VPAn     (irq_VPAn),
         .BERRn    (1'b1),
         .BRn      (1'b1),
         .BGACKn   (1'b1),
-        .IPL0n    (1'b1),
-        .IPL1n    (1'b1),
-        .IPL2n    (1'b1),
+        .IPL0n    (irq_IPL0n),
+        .IPL1n    (irq_IPL1n),
+        .IPL2n    (irq_IPL2n),
 
         .iEdb     (iEdb),
         .oEdb     (oEdb),
@@ -130,6 +136,25 @@ module cisc68k_tb;
         .LDSn (LDSn),
         .wdata(oEdb),
         .done (mon_done)
+    );
+
+    irq_autovec #(
+        .LEVEL(3'd3)
+    ) irq0 (
+        .clk  (clk),
+        .reset(extReset),
+        .sel  (irq_sel),
+        .ASn  (ASn),
+        .RWn  (eRWn),
+        .UDSn (UDSn),
+        .LDSn (LDSn),
+        .FC0  (FC0),
+        .FC1  (FC1),
+        .FC2  (FC2),
+        .IPL0n(irq_IPL0n),
+        .IPL1n(irq_IPL1n),
+        .IPL2n(irq_IPL2n),
+        .VPAn (irq_VPAn)
     );
 
 
