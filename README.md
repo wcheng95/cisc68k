@@ -4,6 +4,12 @@ Study the Motorola 68000 as a classic CISC architecture using a cycle-visible RT
 
 The goal is architectural understanding: programming model, instruction encoding, addressing modes, calls, exceptions, interrupts, and the external bus. Mackerel-F + fx68k provide the reference system; RTL internals are not the subject unless needed to answer an architectural question.
 
+## Current Status
+
+The standalone 68000 survey is complete through Lab11, including the C compiler/ABI experiment.
+
+Lab12, the final CISC-vs-RISC comparison, is deliberately deferred until after the RISC survey. That comparison will use observed results from both architectures rather than a conceptual checklist alone.
+
 ## Roadmap
 
 1. Programming model — D0-D7, A0-A7, PC, SR, operand sizes
