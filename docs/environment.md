@@ -152,6 +152,8 @@ Initial map:
 0x000000 - 0x00FFFF   ROM
 0x010000 - 0x01FFFF   RAM
 0xF00000               MONITOR
+0xF00010               IRQ trigger (survey peripheral)
+0xF00020               16-bit MMIO register
 0xF10000 - 0xFFFFFF   reserved for future experiments
 ```
 
