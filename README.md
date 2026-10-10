@@ -10,6 +10,8 @@ The standalone 68000 survey is complete through Lab11, including the C compiler/
 
 Lab12, the final CISC-vs-RISC comparison, is deliberately deferred until after the RISC survey. That comparison will use observed results from both architectures rather than a conceptual checklist alone.
 
+![cisc68k Lab06](cisc68k_lab06.png)
+
 ## Roadmap
 
 1. Programming model — D0-D7, A0-A7, PC, SR, operand sizes
