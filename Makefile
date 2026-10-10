@@ -46,7 +46,8 @@ TB := \
 	tbench/rom.sv \
 	tbench/ram.sv \
 	tbench/monitor.sv \
-	tbench/irq_autovec.sv
+	tbench/irq_autovec.sv \
+	tbench/mmio_reg.sv
 
 VFLAGS := \
 	--binary \
