@@ -6,9 +6,9 @@ The goal is architectural understanding: programming model, instruction encoding
 
 ## Current Status
 
-The standalone 68000 survey is complete through Lab11, including the C compiler/ABI experiment.
+**Complete — 2026-10-14.**
 
-Lab12, the final CISC-vs-RISC comparison, is deliberately deferred until after the RISC survey. That comparison will use observed results from both architectures rather than a conceptual checklist alone.
+Labs 01–11 completed the standalone 68000 survey. After finishing the RV32I/PicoRV32 survey, [Lab12](labs/lab12/README.md) returned to the project for the final evidence-based CISC-vs-RISC comparison.
 
 ![cisc68k Lab06](cisc68k_lab06.png)
 
@@ -24,7 +24,7 @@ Lab12, the final CISC-vs-RISC comparison, is deliberately deferred until after t
 8. External bus — AS, UDS/LDS, R/W, DTACK, BERR, FC
 9. Memory-mapped I/O and simple survey peripherals
 10. C compiler/ABI examples
-11. Concrete CISC vs RISC comparison with LX7 and RISC-V
+11. Concrete CISC vs RISC comparison with RV32I/PicoRV32
 
 ## Docs
 
