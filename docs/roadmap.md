@@ -2,17 +2,9 @@
 
 ## Status
 
-68000 survey Labs 01–11 are complete.
+**Complete — 2026-10-14.**
 
-Lab12 is intentionally deferred until after the RISC survey so the final CISC-vs-RISC comparison can be based on experiments from both sides rather than on slogans or prior assumptions.
-
-Resume point:
-
-```text
-cisc68k complete through Lab11
-next: RISC survey
-return later: Lab12 — CISC vs RISC
-```
+Labs 01–11 established the 68000 evidence base. Lab12 returned after completion of the RV32I/PicoRV32 survey and closed the project with an experiment-based CISC-vs-RISC comparison.
 
 
 ## 01 — Programming Model
@@ -118,20 +110,11 @@ Any later peripheral should exist only to expose a specific 68000 mechanism. Its
 
 Compile tiny C functions and inspect argument passing, return values, register allocation, stack frames, addressing modes, and optimization effects.
 
-## 12 — CISC vs RISC — Deferred
+## 12 — CISC vs RISC — Complete
 
 Compare observed behavior, not slogans.
 
-| Topic | 68000 | Xtensa LX7 | RISC-V |
-| --- | --- | --- | --- |
-| ISA style | classic CISC | configurable RISC | load/store RISC |
-| registers | D/A classes | windowed address registers | flat integer registers |
-| instruction length | variable | variable/configurable | regular base + compressed |
-| memory operands | rich | more restricted | explicit load/store |
-| addressing modes | rich | comparatively limited | simple |
-| calls | stack/register ABI | register windows | register ABI |
-| exceptions | vector table | Xtensa model | trap model |
-| bus visibility | classic MPU bus | SoC fabric | implementation dependent |
+The completed capstone is [Lab12](../labs/lab12/README.md), based on the cisc68k survey and the completed RV32I/PicoRV32 survey. Xtensa/LX7 is intentionally excluded because it was not studied with the same lab sequence.
 
 Final question:
 
