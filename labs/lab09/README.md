@@ -229,16 +229,18 @@ FC=110   instruction fetches
 FC=101   data accesses
 ```
 
-## Not Yet in This First Pass
+## Scope Boundary
 
-Lab09 will add these only after the baseline bus behavior is understood:
+This lab stops at the baseline external-bus behavior.
+
+Dedicated experiments for:
 
 ```text
-DTACK wait states
-BERR
+programmable DTACK wait states
+BERR fault injection
 ```
 
-Those change bus-cycle completion rather than the basic byte/word/long transfer rules.
+were planned but not completed before the project was archived. They would affect bus-cycle completion and exception behavior, but they are not part of the completed lab set.
 
 ## Questions
 
