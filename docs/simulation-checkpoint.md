@@ -93,111 +93,34 @@ The waveform should be used to inspect the 68000-visible boundary:
 - FC0-FC2
 - IPL0-IPL2 when relevant
 
-## Standalone Simulator: Next Milestone
+## Final Standalone Simulator
 
-The next environment is intentionally smaller than Mackerel-F:
+The planned standalone environment was completed and became the permanent lab machine:
 
 ```text
-cisc68k.sv
+tbench/cisc68k_tb.sv
   |
   +-- fx68k
   +-- ROM
   +-- RAM
-  +-- write-only MONITOR
+  +-- monitor
+  +-- IRQ source
+  +-- MMIO register
 ```
 
-First standalone sanity check:
+The default observation path evolved from VCD-first bring-up to the compact external-bus trace:
 
 ```text
-rom.hex
+make LAB=labNN
     ->
-ROM
-    ->
-fx68k
-    ->
-68000 bus write
-    ->
-MONITOR
-    ->
-Hi
+logs/labNN/labNN.trace
 ```
 
-The same run should generate a useful VCD.
+VCD remains available with `MODE=vcd` or `MODE=both` when RTL timing detail is needed.
 
-## Current Status
+## Archive Status
 
-Known good:
+**Complete — 2026-10-14.**
 
-- native Apple-Silicon 68k cross toolchain
-- fx68k full-system simulation under Verilator
-- host-visible output from 68000 code
-- VCD generation path
-- Surfer workflow
+The standalone machine supported Labs 00–12 through the final CISC-vs-RISC capstone. Mackerel-F remains reference material only; no further simulator construction is planned.
 
-Next:
-
-- build the standalone `cisc68k.sv` machine
-- replace Mackerel-F memory/peripheral complexity with simple ROM, RAM, and monitor models
-- use that machine for the architecture survey
-
-Mackerel-F remains a reference workspace, not the permanent simulation environment.
-
-
-## Lab00 — Standalone Sanity Check: PASS
-
-The first standalone cisc68k lab completed successfully.
-
-Program:
-
-```text
-lab00.c
-  -> writes "Hi\n"
-```
-
-Execution path:
-
-```text
-68k toolchain
-    ->
-rom.hex
-    ->
-testbench ROM
-    ->
-fx68k
-    ->
-68000 bus
-    ->
-write-only monitor
-    ->
-host console
-```
-
-Observed output:
-
-```text
-Hi
-RESULT: lab00 PASS
-```
-
-The simulation also generated:
-
-```text
-logs/lab00/lab00.vcd
-```
-
-with a waveform size of about 122 kB, small enough to keep full VCD tracing enabled for these early labs.
-
-Useful observations from the temporary bus trace used during bring-up:
-
-- reset SP fetched as `0x00020000`
-- reset PC fetched as `0x00000100`
-- supervisor program fetches used `FC=110`
-- supervisor data accesses used `FC=101`
-- `JSR` pushed the return address into RAM near `0x01FFFC`
-- `RTS` read the return address back
-- byte writes duplicated the byte across `oEdb` while `UDS/LDS` selected the active lane
-- monitor writes reached `0xF00000`
-
-The temporary console bus trace was removed after validation. VCD + Surfer is now the normal inspection path.
-
-This completes the infrastructure sanity check. The next work can focus on learning the 68000 rather than building the simulator.
