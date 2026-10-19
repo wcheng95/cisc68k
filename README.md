@@ -14,17 +14,21 @@ Labs 01–11 completed the standalone 68000 survey. After finishing the RV32I/Pi
 
 ## Roadmap
 
-1. Programming model — D0-D7, A0-A7, PC, SR, operand sizes
-2. Instruction encoding — variable-length opcodes and extension words
-3. Addressing modes — direct, indirect, indexed, PC-relative, immediate
-4. Calls and stack — JSR/BSR/RTS, LINK/UNLK, ABI basics
-5. Condition codes and control flow
-6. Exceptions, vectors, supervisor/user mode
-7. Interrupts and interrupt acknowledge
-8. External bus — AS, UDS/LDS, R/W, DTACK, BERR, FC
-9. Memory-mapped I/O and simple survey peripherals
-10. C compiler/ABI examples
-11. Concrete CISC vs RISC comparison with RV32I/PicoRV32
+- Lab00 — standalone simulation sanity check
+- Lab01 — programming model and operand sizes
+- Lab02 — variable-length instruction encoding
+- Lab03 — addressing modes
+- Lab04 — stack and calls
+- Lab05 — condition codes and control flow
+- Lab06 — exceptions and vector table
+- Lab07 — supervisor and user mode
+- Lab08 — interrupt architecture
+- Lab09 — external bus
+- Lab10 — memory-mapped I/O
+- Lab11 — C compiler and ABI
+- Lab12 — CISC vs RISC comparison with RV32I/PicoRV32
+
+The survey did not add dedicated DTACK wait-state or BERR fault-injection experiments; those remain outside the completed lab set.
 
 ## Docs
 
