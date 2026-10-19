@@ -80,26 +80,17 @@ Tang Nano 20K hardware remains optional. The survey is simulation-first.
 
 ## Standalone Survey and Simulation Workspace
 
-The permanent survey environment should be small, explicit, and easy to understand.
+The final survey environment is small, explicit, and easy to understand.
 
 ### Top Level
 
-The architectural top module is:
+The simulation top is:
 
 ```text
-cisc68k.sv
+tbench/cisc68k_tb.sv
 ```
 
-Its responsibilities are limited to:
-
-- instantiate fx68k
-- define the 24-bit memory map
-- decode address regions
-- connect ROM, RAM, and simple experiment peripherals
-- route the 68000 bus
-- generate or route DTACK
-- expose BERR, FC0-FC2, IPL0-IPL2, and other signals when required
-- keep all behavior visible at the 68000 boundary correct
+It instantiates fx68k and owns the standalone survey machine around the CPU boundary: ROM, RAM, address decoding, DTACK routing, trace generation, and the small experiment peripherals used by the labs.
 
 Baseline machine:
 
@@ -117,28 +108,19 @@ Baseline machine:
                               +--> host text output
 ```
 
-### Initial Repository Shape
+### Final Repository Shape
 
 ```text
-rtl/
-    fx68k/
-    cisc68k.sv
-    rom.sv
-    ram.sv
-    monitor.sv
-tb/
-    cisc68k_tb.sv
-rom/
-    tiny survey programs
-tools/
-    helper scripts
-docs/
-Makefile
+fx68k/             upstream/reference CPU RTL and micro/nano ROM data
+tbench/            standalone simulation machine and peripherals
+labs/common/       reset/startup and linker script
+labs/lab00-lab12/  cumulative survey labs
+tools/             build helper
+docs/              architecture and workflow notes
+Makefile           build/run/trace control
 ```
 
-The exact layout can evolve, but the top-level machine should remain obvious.
-
-### Initial Memory Map
+### Memory Map
 
 The 68000 has a 24-bit byte address space:
 
@@ -239,7 +221,7 @@ The project studies the 68000, not the peripherals.
 
 They are not features every peripheral must implement.
 
-`cisc68k.sv` should expose them to decode or experiment logic only when needed, for example:
+The testbench exposes them to decode or experiment logic only when needed, for example:
 
 - user vs supervisor accesses
 - program vs data accesses
@@ -255,15 +237,15 @@ Use Verilator for the standalone full-system simulator.
     ->
 cross assembler/compiler
     ->
-rom.hex
+lab hex image
     ->
-cisc68k.sv + fx68k
+tbench/cisc68k_tb.sv + fx68k
     ->
 Verilator
     ->
-console result + VCD
+console result + compact bus trace
     ->
-Surfer
+optional VCD / Surfer
 ```
 
 The first goal is not a complete computer. It is a transparent machine in which each 68000-visible transaction is easy to explain.
