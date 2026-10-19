@@ -2,7 +2,7 @@
 
 ## Mission
 
-Use the Motorola 68000 as a clean classic-CISC reference and compare what it exposes architecturally with modern RISC machines such as Xtensa LX7 and RISC-V.
+Use the Motorola 68000 as a clean classic-CISC reference and compare what it exposes architecturally with the RV32I/PicoRV32 survey.
 
 The project is about understanding the CPU and its visible system boundary, not about retro-computing for its own sake.
 
@@ -31,12 +31,12 @@ The 68000 is attractive because it combines:
 - supervisor and user state
 - interrupts and interrupt acknowledge
 - external bus protocol
-- DTACK, wait states, and BERR
+- DTACK behavior at the external bus boundary
 - memory-mapped I/O
 - tiny bare-metal programs
 - compiler-generated assembly
 - cycle-level waveform observation
-- comparison with LX7 and RISC-V
+- comparison with RV32I/PicoRV32
 
 ## Out of Scope
 
@@ -91,3 +91,8 @@ That module defines the 68000-visible machine:
 - only the peripherals required by a specific architecture experiment
 
 The goal is not to model a complete historical computer. The goal is to make each external behavior seen by the 68000 correct and easy to observe.
+
+
+## Archive Note
+
+The completed lab set did not include dedicated programmable DTACK wait-state or BERR fault-injection experiments. Those were considered during planning but were not required to close the final survey. The implemented external-bus labs cover normal DTACK completion, byte lanes, function codes, stack traffic, interrupt acknowledge, and MMIO.
