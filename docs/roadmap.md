@@ -15,7 +15,7 @@ Questions:
 
 - Why separate data and address registers?
 - Which instructions use each class?
-- How does the register model differ from LX7 and RISC-V?
+- How does the register model differ from RV32I?
 
 Experiment: tiny assembly sequences with register-state inspection.
 
@@ -56,7 +56,7 @@ Compare instruction count and bus activity for equivalent operations.
 
 Study A7, JSR, BSR, RTS, LINK, UNLK, parameters, locals, and basic ABI behavior.
 
-Compare directly with Xtensa register windows.
+Compare with the RV32I call/ABI model after the RISC survey.
 
 ## 05 — Condition Codes and Control Flow
 
@@ -83,11 +83,12 @@ Observe:
 - UDS/LDS
 - R/W
 - DTACK
-- BERR
 - function codes
 - IPL inputs
 
-Capture instruction fetches, byte/word/long reads and writes, stack traffic, interrupt acknowledge, and wait states.
+Capture instruction fetches, byte/word/long reads and writes, stack traffic, and interrupt acknowledge.
+
+Dedicated DTACK wait-state and BERR fault-injection experiments were planned but not completed before archive.
 
 ## 10 — Memory-Mapped I/O
 
